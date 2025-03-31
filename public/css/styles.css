@@ -1,0 +1,434 @@
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #2c1957;
+}
+
+h1 {
+    color: #c8fcf0;
+    text-align: center;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    padding: 25px 40px;
+    font-size: 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: block;
+    margin: 20px auto;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar-day {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.calendar-day.selected {
+    background-color: green !important;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day input {
+    margin-bottom: 5px;
+}
+
+.calendar-day.placeholder {
+    visibility: hidden;
+    border: none;
+    background-color: transparent;
+}
+
+.calendar-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: #47f974;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.calendar-header-result {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: #7822b5;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#availability-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+#name {
+    width: 60%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 10px;
+}
+
+#luglio {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: lightblue;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#agosto {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: violet;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#luglio, #agosto {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#luglio-agosto-container {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+#end {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+}
+
+#results {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #dfa105;
+}
+
+#calendar-day-results {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#best-slot {
+    text-align: center;
+}
+
+#results-title {
+    font-size: 40px;
+    font-weight: bold;
+    color: black;
+}
+
+#end-results {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: black;
+}
+
+#results-button {
+    padding: 25px 40px;
+    font-size: 20px;
+    background-color: #6c87a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: block;
+    margin: 20px auto;
+}
+
+#slot-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    width: 40%;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: green;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #2c1957;
+}
+
+h1 {
+    color: #c8fcf0;
+    text-align: center;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    padding: 25px 40px;
+    font-size: 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: block;
+    margin: 20px auto;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar-day {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.calendar-day.selected {
+    background-color: green !important;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day input {
+    margin-bottom: 5px;
+}
+
+.calendar-day.placeholder {
+    visibility: hidden;
+    border: none;
+    background-color: transparent;
+}
+
+.calendar-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: #47f974;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.calendar-header-result {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: #7822b5;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#availability-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+#name {
+    width: 60%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 10px;
+}
+
+#luglio {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: lightblue;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#agosto {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background-color: violet;
+    color: #1d103b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#luglio, #agosto {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+#luglio-agosto-container {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+#end {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+}
+
+#results {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #dfa105;
+}
+
+#calendar-day-results {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#best-slot {
+    text-align: center;
+}
+
+#results-title {
+    font-size: 40px;
+    font-weight: bold;
+    color: black;
+}
+
+#end-results {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: black;
+}
+
+#results-button {
+    padding: 25px 40px;
+    font-size: 20px;
+    background-color: #6c87a4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    border-radius: 10px;
+    display: block;
+    margin: 20px auto;
+}
+
+#slot-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    width: 40%;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid #ccc;
+    background-color: green;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
