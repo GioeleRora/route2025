@@ -24,7 +24,7 @@ app.post('/api/availability', (req, res) => {
         fs.writeFileSync(filePath, '[]', 'utf8'); // Create an empty JSON array
     }
 
-    // Read the existing data
+    // Read the existing datas
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).json({ error: 'Internal server error' });
