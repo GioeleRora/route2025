@@ -341,7 +341,7 @@ button:hover {
     font-weight: bold;
     text-align: center;
     padding: 10px;
-    background-color: violet;
+    background-color: rgb(146, 130, 238);
     color: #1d103b;
     border: 1px solid #ccc;
     border-radius: 10px;
