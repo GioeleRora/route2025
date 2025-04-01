@@ -58,7 +58,7 @@ app.get('/results', (req, res) => {
 
 // API route to fetch availabilities for results.js
 app.get('/api/availabilities', (req, res) => {
-    const filePath = path.join(__dirname, 'data', 'availabilities.json');
+    const filePath = path.join(process.cwd(), 'data', 'availabilities.json');
 
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
