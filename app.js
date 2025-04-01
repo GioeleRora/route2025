@@ -17,7 +17,7 @@ app.post('/api/availability', (req, res) => {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
-    const filePath = path.join(__dirname, 'data', 'availabilities.json');
+    const filePath = path.join(process.cwd(), 'data', 'availabilities.json');
 
     // Ensure the file exists or create it if it doesn't
     if (!fs.existsSync(filePath)) {
@@ -43,7 +43,7 @@ app.post('/api/availability', (req, res) => {
         // Write the updated data back to the file
         fs.writeFile(filePath, JSON.stringify(availabilities, null, 2), (writeErr) => {
             if (writeErr) {
-                return res.status(500).json({ error: 'Internal server error' });
+                return res.status(500).json({ error: 'Internal server error 55' });
             }
 
             res.status(200).json({ message: 'Availability submitted successfully' });
@@ -53,7 +53,7 @@ app.post('/api/availability', (req, res) => {
 
 // Serve results.html for the /results route
 app.get('/results', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'results.html'));
+    res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
 });
 
 // API route to fetch availabilities for results.js
@@ -77,7 +77,7 @@ app.get('/api/availabilities', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
 // Start the server
