@@ -1,79 +1,76 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@vercel/blob');
 const app = express();
 const port = 3000;
+
+// Initialize Vercel Blob client
+const blobClient = createClient();
 
 app.use(bodyParser.json());
 app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
+const blobName = 'My database'; // Blob name in the Vercel Blob Database
 
-app.post('/api/availability', (req, res) => {
+app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
 
     if (!name || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
-    const filePath = path.join(process.cwd(), 'data', 'availabilities.json');
-
-    // Ensure the file exists or create it if it doesn't
-    if (!fs.existsSync(filePath)) {
-        fs.writeFileSync(filePath, '[]', 'utf8'); // Create an empty JSON array
-    }
-
-    // Read the existing datas
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-
+    try {
+        // Fetch existing data from the blob
         let availabilities = [];
-        try {
-            availabilities = JSON.parse(data); // Parse existing data
-        } catch (parseErr) {
-            console.error('Error parsing availabilities.json:', parseErr);
+        const blob = await blobClient.get(blobName);
+        if (blob) {
+            const data = await blob.text();
+            availabilities = JSON.parse(data);
         }
 
-        // Add the new availability
-        availabilities.push({ name, days });
+        // Check if the name already exists
+        const existingIndex = availabilities.findIndex(entry => entry.name === name);
+        if (existingIndex !== -1) {
+            // Replace the existing entry
+            availabilities[existingIndex] = { name, days };
+        } else {
+            // Add the new availability
+            availabilities.push({ name, days });
+        }
 
-        // Write the updated data back to the file
-        fs.writeFile(filePath, JSON.stringify(availabilities, null, 2), (writeErr) => {
-            if (writeErr) {
-                return res.status(500).json({ error: 'Internal server error 55' });
-            }
-
-            res.status(200).json({ message: 'Availability submitted successfully' });
+        // Write the updated data back to the blob
+        await blobClient.put(blobName, JSON.stringify(availabilities, null, 2), {
+            contentType: 'application/json',
         });
-    });
+
+        res.status(200).json({ message: 'Availability submitted successfully' });
+    } catch (err) {
+        console.error('Error interacting with Vercel Blob:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/availabilities', async (req, res) => {
+    try {
+        // Fetch existing data from the blob
+        const blob = await blobClient.get(blobName);
+        if (!blob) {
+            return res.status(200).json([]); // Return an empty array if no data exists
+        }
+
+        const data = await blob.text();
+        const availabilities = JSON.parse(data);
+        res.status(200).json(availabilities);
+    } catch (err) {
+        console.error('Error interacting with Vercel Blob:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Serve results.html for the /results route
 app.get('/results', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
-});
-
-// API route to fetch availabilities for results.js
-app.get('/api/availabilities', (req, res) => {
-    const filePath = path.join(process.cwd(), 'data', 'availabilities.json');
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading availabilities.json:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-
-        try {
-            const availabilities = JSON.parse(data);
-            res.status(200).json(availabilities);
-        } catch (parseErr) {
-            console.error('Error parsing availabilities.json:', parseErr);
-            res.status(500).json({ error: 'Internal server error' });
-        }
-    });
 });
 
 app.get('/', (req, res) => {
