@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Fetch availability data
-        const response = await fetch('/api/availabilities'); // Fetch all availabilities
+        const response = await fetch('/api/availability'); // Fetch all availabilities
         const availabilities = await response.json();
 
         // Calculate  the number of people who selected each day
