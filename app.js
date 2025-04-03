@@ -34,14 +34,15 @@ const fetchBlobData = async () => {
 
 app.post('/api/test-upload', async (req, res) => {
     try {
-        const { url } = await put(blobName, JSON.stringify({ test: "Hello, Blob!" }, null, 2), {
+        const { url } = await put('articles/blob.txt', 'Hello World!', {
             access: 'public',
-            contentType: 'application/json',
+            contentType: 'text/plain',
         });
+        console.log('Uploaded file URL:', url);
         res.status(200).json({ message: 'Test upload successful', url });
     } catch (err) {
         console.error('Error uploading test data:', err.message, err.stack);
-        res.status(500).json({ error: 'Internal server error 5656', details: err.message });
+        res.status(500).json({ error: 'Internal server errrrrror', details: err.message });
     }
 });
 /*
