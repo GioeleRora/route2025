@@ -16,7 +16,14 @@ const blobUrl = `https://route2025.vercel-storage.com/My%20database`;
 // Helper function to fetch data from the blob
 const fetchBlobData = async () => {
     try {
+        console.log('Fetching data from blob:', blobUrl);
         const response = await axios.get(blobUrl);
+
+        if (!response.data || response.data.trim() === '') {
+            console.warn('Blob is empty, returning empty array.');
+            return []; // Return an empty array if the blob is empty
+        }
+
         try {
             return JSON.parse(response.data); // Parse and return the data
         } catch (parseErr) {
@@ -28,7 +35,7 @@ const fetchBlobData = async () => {
             console.warn('Blob not found, returning empty array.');
             return []; // Return an empty array if the blob does not exist
         }
-        console.error('Error loading data from blob:', err.message);
+        console.error('Error loading data from blob:', err.message, err.stack);
         throw new Error('Failed to load data from blob');
     }
 };
