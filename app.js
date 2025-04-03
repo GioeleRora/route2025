@@ -33,20 +33,6 @@ const fetchBlobData = async () => {
     }
 };
 
-app.post('/api/test-upload', async (req, res) => {
-    try {
-        const { url } = await put('articles/blob.txt', 'Hello World!', {
-            access: 'public',
-            contentType: 'text/plain',
-        });
-        console.log('Uploaded file URL:', url);
-        res.status(200).json({ message: 'Test upload successful', url });
-    } catch (err) {
-        console.error('Error uploading test data:', err.message, err.stack);
-        res.status(500).json({ error: 'Internal server error test', details: err.message });
-    }
-});
-/*
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
 
@@ -80,7 +66,7 @@ app.post('/api/availability', async (req, res) => {
         res.status(500).json({ error: 'Error interacting with Vercel Blob post:', details: err.message });
     }
 });
-*/
+
 app.get('/api/availabilities', async (req, res) => {
     try {
         // Fetch existing data from the blob
