@@ -58,14 +58,14 @@ app.post('/api/availability', async (req, res) => {
 
         // Write the updated data back to the blob using 'put'
         const { url } = await put(blobName, JSON.stringify(availabilities, null, 2), {
-            access: 'public', // Optional: Make the blob publicly accessible
+            access: 'public',
             contentType: 'application/json',
         });
 
         res.status(200).json({ message: 'Availability submitted successfully', url });
     } catch (err) {
         console.error('Error interacting with Vercel Blob post:', err.message, err.stack);
-        res.status(500).json({ error: 'Error interacting with Vercel Blob post:', details: err.message });
+        res.status(500).json({ error: 'Error interacting with Vercel Blob post 50:', details: err.message });
     }
 });
 
