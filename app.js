@@ -41,7 +41,7 @@ app.post('/api/test-upload', async (req, res) => {
         res.status(200).json({ message: 'Test upload successful', url });
     } catch (err) {
         console.error('Error uploading test data:', err.message, err.stack);
-        res.status(500).json({ error: 'Internal server error', details: err.message });
+        res.status(500).json({ error: 'Internal server error 5656', details: err.message });
     }
 });
 /*
