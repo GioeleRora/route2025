@@ -18,17 +18,13 @@ const fetchBlobData = async () => {
         console.log('Fetching data from blob:', blobUrl);
         const response = await axios.get(blobUrl);
 
-        if (!response.data || response.data.trim() === '') {
+        if (!response.data || Object.keys(response.data).length === 0) {
             console.warn('Blob is empty, returning empty array.');
             return []; // Return an empty array if the blob is empty
         }
 
-        try {
-            return JSON.parse(response.data); // Parse and return the data
-        } catch (parseErr) {
-            console.error('Error parsing blob data:', parseErr.message);
-            return []; // Return an empty array if parsing fails
-        }
+        // Return the parsed JSON data directly
+        return response.data;
     } catch (err) {
         if (err.response && err.response.status === 404) {
             console.warn('Blob not found, returning empty array.');
