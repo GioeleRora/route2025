@@ -96,3 +96,4 @@ app.listen(port, () => {
 });
 
 module.exports = { fetchBlobData };
+module.exports = app;
