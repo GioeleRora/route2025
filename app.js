@@ -16,15 +16,35 @@ const blobUrl = `https://route2025.vercel-storage.com/${blobName}`;
 const fetchBlobData = async () => {
     try {
         const response = await axios.get(blobUrl);
-        return response.data; // Return parsed JSON data
+        try {
+            return JSON.parse(response.data); // Parse and return the data
+        } catch (parseErr) {
+            console.error('Error parsing blob data:', parseErr.message);
+            return []; // Return an empty array if parsing fails
+        }
     } catch (err) {
         if (err.response && err.response.status === 404) {
+            console.warn('Blob not found, returning empty array.');
             return []; // Return an empty array if the blob does not exist
         }
-        throw err; // Rethrow other errors
+        console.error('Error loading data from blob:', err.message);
+        throw new Error('Failed to load data from blob');
     }
 };
 
+app.post('/api/test-upload', async (req, res) => {
+    try {
+        const { url } = await put(blobName, JSON.stringify({ test: "Hello, Blob!" }, null, 2), {
+            access: 'public',
+            contentType: 'application/json',
+        });
+        res.status(200).json({ message: 'Test upload successful', url });
+    } catch (err) {
+        console.error('Error uploading test data:', err.message, err.stack);
+        res.status(500).json({ error: 'Internal server error', details: err.message });
+    }
+});
+/*
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
 
@@ -58,7 +78,7 @@ app.post('/api/availability', async (req, res) => {
         res.status(500).json({ error: 'Error interacting with Vercel Blob post:', details: err.message });
     }
 });
-
+*/
 app.get('/api/availabilities', async (req, res) => {
     try {
         // Fetch existing data from the blob
