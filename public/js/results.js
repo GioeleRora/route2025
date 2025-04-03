@@ -4,9 +4,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Fetch availability data
-        const response = await fetch('/api/availability'); // Fetch all availabilities
-        const availabilities = await response.json();
-
+        const response = await fetch('/api/availability');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const availabilities = await response.json(); // Parse the JSON response
+        console.log('Availabilities:', availabilities);
+        
         // Calculate  the number of people who selected each day
         const daysCount = {};
         availabilities.forEach(({ days }) => {
