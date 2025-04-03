@@ -1,11 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { createClient } = require('@vercel/blob');
+const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
 const app = express();
 const port = 3000;
-
-// Initialize Vercel Blob client
-const blobClient = createClient();
 
 app.use(bodyParser.json());
 app.use(express.static('views')); // Serve index.html from 'views'
@@ -39,12 +36,13 @@ app.post('/api/availability', async (req, res) => {
             availabilities.push({ name, days });
         }
 
-        // Write the updated data back to the blob
-        await blobClient.put(blobName, JSON.stringify(availabilities, null, 2), {
+        // Write the updated data back to the blob using 'put'
+        const { url } = await put(blobName, JSON.stringify(availabilities, null, 2), {
+            access: 'public', // Optional: Make the blob publicly accessible
             contentType: 'application/json',
         });
 
-        res.status(200).json({ message: 'Availability submitted successfully' });
+        res.status(200).json({ message: 'Availability submitted successfully', url });
     } catch (err) {
         console.error('Error interacting with Vercel Blob:', err);
         res.status(500).json({ error: 'Internal server error' });
