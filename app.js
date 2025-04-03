@@ -69,7 +69,7 @@ app.post('/api/availability', async (req, res) => {
     }
 });
 
-app.get('/api/availabilities', async (req, res) => {
+app.get('/api/availability', async (req, res) => {
     try {
         // Fetch existing data from the blob
         const availabilities = await fetchBlobData();
