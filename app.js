@@ -54,8 +54,8 @@ app.post('/api/availability', async (req, res) => {
 
         res.status(200).json({ message: 'Availability submitted successfully', url });
     } catch (err) {
-        console.error('Error interacting with Vercel Blob:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error interacting with Vercel Blob post:', err.message, err.stack);
+        res.status(500).json({ error: 'Error interacting with Vercel Blob post:', details: err.message });
     }
 });
 
@@ -65,8 +65,8 @@ app.get('/api/availabilities', async (req, res) => {
         const availabilities = await fetchBlobData();
         res.status(200).json(availabilities);
     } catch (err) {
-        console.error('Error interacting with Vercel Blob:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error interacting with Vercel Blob get:', err.message, err.stack);
+        res.status(500).json({ error: 'Error interacting with Vercel Blob get:', details: err.message });
     }
 });
 
