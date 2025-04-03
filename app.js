@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
+const axios = require('axios'); // Import axios for HTTP requests
 const app = express();
 const port = 3000;
 
@@ -9,6 +10,20 @@ app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
 const blobName = 'My database'; // Blob name in the Vercel Blob Database
+const blobUrl = `https://vercel.blob/${blobName}`; // Replace with your actual blob URL
+
+// Helper function to fetch data from the blob
+const fetchBlobData = async () => {
+    try {
+        const response = await axios.get(blobUrl);
+        return response.data; // Return parsed JSON data
+    } catch (err) {
+        if (err.response && err.response.status === 404) {
+            return []; // Return an empty array if the blob does not exist
+        }
+        throw err; // Rethrow other errors
+    }
+};
 
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
@@ -19,12 +34,7 @@ app.post('/api/availability', async (req, res) => {
 
     try {
         // Fetch existing data from the blob
-        let availabilities = [];
-        const blob = await blobClient.get(blobName);
-        if (blob) {
-            const data = await blob.text();
-            availabilities = JSON.parse(data);
-        }
+        let availabilities = await fetchBlobData();
 
         // Check if the name already exists
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
@@ -52,13 +62,7 @@ app.post('/api/availability', async (req, res) => {
 app.get('/api/availabilities', async (req, res) => {
     try {
         // Fetch existing data from the blob
-        const blob = await blobClient.get(blobName);
-        if (!blob) {
-            return res.status(200).json([]); // Return an empty array if no data exists
-        }
-
-        const data = await blob.text();
-        const availabilities = JSON.parse(data);
+        const availabilities = await fetchBlobData();
         res.status(200).json(availabilities);
     } catch (err) {
         console.error('Error interacting with Vercel Blob:', err);
