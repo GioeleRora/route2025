@@ -2,22 +2,30 @@ const express = require('express');
 const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
 const axios = require('axios'); // Import axios for HTTP requests
 const router = express.Router();
+
 const Availability = require('../models/availability');
 
 const blobName = 'My database'; // Blob name in the Vercel Blob Database
 const blobUrl = `https://route2025.vercel-storage.com/${blobName}`; // Replace with your actual blob URL
 
-// Load data from blob
-const loadDataFromBlob = async () => {
+const fetchBlobData = async () => {
     try {
+        console.log('Fetching data from blob:', blobUrl);
         const response = await axios.get(blobUrl);
-        return response.data; // Parse and return the data
+
+        if (!response.data || Object.keys(response.data).length === 0) {
+            console.warn('Blob is empty, returning empty array.');
+            return []; // Return an empty array if the blob is empty
+        }
+
+        // Return the parsed JSON data directly
+        return response.data;
     } catch (err) {
         if (err.response && err.response.status === 404) {
             console.warn('Blob not found, returning empty array.');
             return []; // Return an empty array if the blob does not exist
         }
-        console.error('Error loading data from blob:', err.message);
+        console.error('Error loading data from blob:', err.message, err.stack);
         throw new Error('Failed to load data from blob');
     }
 };
@@ -43,7 +51,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        let availabilities = await loadDataFromBlob();
+        let availabilities = await fetchBlobData();
         availabilities = availabilities.filter(a => a.name !== name); // Remove existing entry
         availabilities.push(new Availability(name, days));
         await saveDataToBlob(availabilities); // Save to blob
@@ -57,7 +65,7 @@ router.post('/', async (req, res) => {
 // Get all availabilities
 router.get('/', async (req, res) => {
     try {
-        const availabilities = await loadDataFromBlob();
+        const availabilities = await fetchBlobData();
         res.json(availabilities);
     } catch (err) {
         console.error('Error fetching availabilities:', err.message);
@@ -69,7 +77,7 @@ router.get('/', async (req, res) => {
 router.get('/best-slot', async (req, res) => {
     const N = 5;
     try {
-        const availabilities = await loadDataFromBlob();
+        const availabilities = await fetchBlobData();
         const daysCount = {};
 
         availabilities.forEach(({ days }) => {
@@ -94,8 +102,9 @@ router.get('/best-slot', async (req, res) => {
         res.json({ bestSlot, maxMean });
     } catch (err) {
         console.error('Error calculating best slot:', err.message);
-        res.status(500).send('Internal server error get best slot');
+        res.status(500).send('Internal server error ');
     }
 });
 
 module.exports = router;
+module.exports = { fetchBlobData };

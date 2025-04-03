@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const opacity = count / maxCount; // Calculate opacity proportional to the count
                 dayDiv.style.backgroundColor = `rgba(0, 128, 0, ${opacity})`; // Green with varying opacity
             } else {
-                dayDiv.style.backgroundColor = 'white'; // Default color if no data
+                dayDiv.style.backgroundColor = 'trasparent'; // Default color if no data
             }
 
             calendarContainer.appendChild(dayDiv);

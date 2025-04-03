@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
 const axios = require('axios'); // Import axios for HTTP requests
 const path = require('path');
+const { fetchBlobData } = require('../availability.js');
 const app = express();
 const port = 3000;
 
@@ -12,28 +13,8 @@ app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
 const blobName = 'My database-NFv7xQqqvGbeNZWEUMSrYk2QU6BFH5'; // Blob name in the Vercel Blob Database
 const blobUrl = `https://aveoe7yulyygayoq.public.blob.vercel-storage.com/${blobName}`;
-// Helper function to fetch data from the blob
-const fetchBlobData = async () => {
-    try {
-        console.log('Fetching data from blob:', blobUrl);
-        const response = await axios.get(blobUrl);
 
-        if (!response.data || Object.keys(response.data).length === 0) {
-            console.warn('Blob is empty, returning empty array.');
-            return []; // Return an empty array if the blob is empty
-        }
 
-        // Return the parsed JSON data directly
-        return response.data;
-    } catch (err) {
-        if (err.response && err.response.status === 404) {
-            console.warn('Blob not found, returning empty array.');
-            return []; // Return an empty array if the blob does not exist
-        }
-        console.error('Error loading data from blob:', err.message, err.stack);
-        throw new Error('Failed to load data from blob');
-    }
-};
 
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
@@ -79,6 +60,8 @@ app.get('/api/availability', async (req, res) => {
         res.status(500).json({ error: 'Error interacting with Vercel Blob get:', details: err.message });
     }
 });
+
+module.exports = { fetchBlobData };
 
 // Serve results.html for the /results route
 app.get('/results', (req, res) => {
