@@ -1,35 +1,37 @@
 const express = require('express');
-const { createClient } = require('@vercel/blob');
+const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
+const axios = require('axios'); // Import axios for HTTP requests
 const router = express.Router();
 const Availability = require('../models/availability');
 
-// Initialize Vercel Blob client
-const blobClient = createClient();
 const blobName = 'My database'; // Blob name in the Vercel Blob Database
+const blobUrl = `https://route2025.vercel-storage.com/${blobName}`; // Replace with your actual blob URL
 
 // Load data from blob
 const loadDataFromBlob = async () => {
     try {
-        const blob = await blobClient.get(blobName);
-        if (blob) {
-            const data = await blob.text();
-            return JSON.parse(data); // Parse and return the data
-        }
-        return []; // Return an empty array if no data exists
+        const response = await axios.get(blobUrl);
+        return response.data; // Parse and return the data
     } catch (err) {
-        console.error('Error loading data from blob:', err);
-        return [];
+        if (err.response && err.response.status === 404) {
+            console.warn('Blob not found, returning empty array.');
+            return []; // Return an empty array if the blob does not exist
+        }
+        console.error('Error loading data from blob:', err.message);
+        throw new Error('Failed to load data from blob');
     }
 };
 
 // Save data to blob
 const saveDataToBlob = async (data) => {
     try {
-        await blobClient.put(blobName, JSON.stringify(data, null, 2), {
+        await put(blobName, JSON.stringify(data, null, 2), {
             contentType: 'application/json',
+            access: 'public', // Optional: Make the blob publicly accessible
         });
     } catch (err) {
-        console.error('Error saving data to blob:', err);
+        console.error('Error saving data to blob:', err.message);
+        throw new Error('Failed to save data to blob');
     }
 };
 
@@ -47,7 +49,7 @@ router.post('/', async (req, res) => {
         await saveDataToBlob(availabilities); // Save to blob
         res.status(201).send('Availability added');
     } catch (err) {
-        console.error('Error adding availability:', err);
+        console.error('Error adding availability:', err.message);
         res.status(500).send('Internal server error');
     }
 });
@@ -58,14 +60,9 @@ router.get('/', async (req, res) => {
         const availabilities = await loadDataFromBlob();
         res.json(availabilities);
     } catch (err) {
-        console.error('Error fetching availabilities:', err);
+        console.error('Error fetching availabilities:', err.message);
         res.status(500).send('Internal server error');
     }
-});
-
-// Serve results page
-router.get('/results', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/results.html'));
 });
 
 // Calculate the best N-day slot
@@ -94,41 +91,9 @@ router.get('/best-slot', async (req, res) => {
             }
         }
 
-        if (bestSlot.length > 0) {
-            const startIndex = sortedDays.indexOf(bestSlot[0]);
-            const endIndex = sortedDays.indexOf(bestSlot[bestSlot.length - 1]);
-
-            // Extend the slot to include consecutive days with the same or higher count
-            let extendedSlot = [...bestSlot];
-
-            // Extend forward
-            for (let i = endIndex + 1; i < sortedDays.length; i++) {
-                const day = sortedDays[i];
-                if (daysCount[day] >= maxMean) {
-                    extendedSlot.push(day);
-                } else {
-                    break;
-                }
-            }
-
-            // Extend backward
-            for (let i = startIndex - 1; i >= 0; i--) {
-                const day = sortedDays[i];
-                if (daysCount[day] >= maxMean) {
-                    extendedSlot.unshift(day);
-                } else {
-                    break;
-                }
-            }
-
-            if (extendedSlot.length > N) {
-                bestSlot = extendedSlot;
-            }
-        }
-
         res.json({ bestSlot, maxMean });
     } catch (err) {
-        console.error('Error calculating best slot:', err);
+        console.error('Error calculating best slot:', err.message);
         res.status(500).send('Internal server error');
     }
 });

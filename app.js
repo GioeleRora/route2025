@@ -10,7 +10,7 @@ app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
 const blobName = 'My database'; // Blob name in the Vercel Blob Database
-const blobUrl = `https://vercel.blob/${blobName}`; // Replace with your actual blob URL
+const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com`;
 
 // Helper function to fetch data from the blob
 const fetchBlobData = async () => {
