@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
 const axios = require('axios'); // Import axios for HTTP requests
+const path = require('path');
 const app = express();
 const port = 3000;
 
@@ -42,7 +43,7 @@ app.post('/api/test-upload', async (req, res) => {
         res.status(200).json({ message: 'Test upload successful', url });
     } catch (err) {
         console.error('Error uploading test data:', err.message, err.stack);
-        res.status(500).json({ error: 'Internal server errrrrror', details: err.message });
+        res.status(500).json({ error: 'Internal server error test', details: err.message });
     }
 });
 /*

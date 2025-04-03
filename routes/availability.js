@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
         res.status(201).send('Availability added');
     } catch (err) {
         console.error('Error adding availability:', err.message);
-        res.status(500).send('Internal server error');
+        res.status(500).send('Internal server error add availability');
     }
 });
 
@@ -94,7 +94,7 @@ router.get('/best-slot', async (req, res) => {
         res.json({ bestSlot, maxMean });
     } catch (err) {
         console.error('Error calculating best slot:', err.message);
-        res.status(500).send('Internal server error');
+        res.status(500).send('Internal server error get best slot');
     }
 });
 
