@@ -1,16 +1,17 @@
 const express = require('express');
 const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
 const router = express.Router();
-const { fetchBlobData } = require('../availability.js');
+const { fetchBlobData } = require('../routes/availability.js');
 
 const Availability = require('../models/availability');
 
 const blobName = 'route2025';
+const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com/route2025/' + blobName;
 
 // Save data to blob
 const saveDataToBlob = async (data) => {
     try {
-        await put(blobName, JSON.stringify(data, null, 2), {
+        await put(blobUrl, JSON.stringify(data, null, 2), {
             contentType: 'application/json',
             access: 'public', // Optional: Make the blob publicly accessible
         });
