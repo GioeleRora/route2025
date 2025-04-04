@@ -5,7 +5,7 @@ const { fetchBlobData } = require('../availability.js');
 
 const Availability = require('../models/availability');
 
-const blobName = 'My database-NFv7xQqqvGbeNZWEUMSrYk2QU6BFH5-2x9kCLMUIbWoi8kcGGjKIfAZ1k6vI0'; // Blob name in the Vercel Blob Database
+const blobName = 'My database';
 
 // Save data to blob
 const saveDataToBlob = async (data) => {
