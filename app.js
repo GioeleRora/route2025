@@ -11,8 +11,8 @@ app.use(bodyParser.json());
 app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
-const blobName = 'My database/route2025';
-const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com/My%20database/route2025';
+const blobName = 'route2025';
+const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com/' + blobName;
 
 const fetchBlobData = async () => {
     try {
