@@ -6,7 +6,7 @@ const { fetchBlobData } = require('../routes/availability.js');
 const Availability = require('../models/availability');
 
 const blobName = 'route2025';
-const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com/route2025/' + blobName;
+const blobUrl = 'https://aveoe7yulyygayoq.public.blob.vercel-storage.com/' + blobName;
 
 // Save data to blob
 const saveDataToBlob = async (data) => {
