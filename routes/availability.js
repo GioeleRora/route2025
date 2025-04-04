@@ -5,7 +5,7 @@ const { fetchBlobData } = require('../availability.js');
 
 const Availability = require('../models/availability');
 
-const blobName = 'My database';
+const blobName = 'My database/route2025';
 
 // Save data to blob
 const saveDataToBlob = async (data) => {
