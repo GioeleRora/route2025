@@ -12,7 +12,7 @@ app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
 const blobName = 'route2025-m8mzcPGnaGB3DtnHVYShWZp0DywYxq';
-const blobUrl = `https://aveoe7yulyygayoq.public.blob.vercel-storage.com/route2025-m8mzcPGnaGB3DtnHVYShWZp0DywYxq`;
+const blobUrl = `https://aveoe7yulyygayoq.public.blob.vercel-storage.com/${blobName}`;
 
 const fetchBlobData = async () => {
     try {
@@ -55,7 +55,7 @@ const saveDataToBlob = async (data) => {
         }
         existingData.push(data);    
 
-        await put(blobUrl, JSON.stringify(existingData, null, 2), {
+        await put(blobName, JSON.stringify(existingData, null, 2), {
             access: 'public',
             contentType: 'application/json',
         });
