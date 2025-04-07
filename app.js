@@ -85,7 +85,7 @@ app.post('/api/availability', async (req, res) => {
 
         await saveDataToBlob(availabilities);
 
-        res.status(200).json({ message: 'Availability submitted successfully', url });
+        res.status(200).json({ message: 'Availability submitted successfully', blobUrl });
     } catch (err) {
         console.error('Error interacting with Vercel Blob post:', err.message, err.stack);
         res.status(500).json({ error: 'Error interacting with Vercel Blob post 50:', details: err.message });
