@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Fetch availability data
-        const response = await fetch('/api/availability');
+        const response = await fetch('/api/availability', {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache', // Forza il browser a non usare la cache
+            }
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
