@@ -10,13 +10,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'Cache-Control': 'no-cache', // Forza il browser a non usare la cache
             }
         });
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const availabilities = await response.json(); // Parse the JSON response
         console.log('Availabilities:', availabilities);
 
-        // Calculate  the number of people who selected each day
+        // Clear the calendar to avoid appending old data
+        calendarContainer.innerHTML = ''; // Resetta il contenitore del calendario
+
+        // Calculate the number of people who selected each day
         const daysCount = {};
         availabilities.forEach(({ days }) => {
             days.forEach(day => {
@@ -54,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const opacity = count / maxCount; // Calculate opacity proportional to the count
                 dayDiv.style.backgroundColor = `rgba(0, 128, 0, ${opacity})`; // Green with varying opacity
             } else {
-                dayDiv.style.backgroundColor = 'trasparent'; // Default color if no data
+                dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
             }
 
             calendarContainer.appendChild(dayDiv);
