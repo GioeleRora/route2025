@@ -72,13 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             while (start > 0 && (daysCount[dateRange[start - 1]] || 0) === mean) {
                 start--;
                 slot = dateRange.slice(start, end + 1);
-                mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / slot.length;
             }
 
             while (end < dateRange.length - 1 && (daysCount[dateRange[end + 1]] || 0) === mean) {
                 end++;
                 slot = dateRange.slice(start, end + 1);
-                mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / slot.length;
             }
 
             // Check if this slot has the maximum mean
@@ -86,7 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 maxMean = mean;
                 bestSlots = [slot]; // Reset to only this slot
             } else if (mean === maxMean) {
-                bestSlots.push(slot); // Add this slot to the list of best slots
+                const slotString = JSON.stringify(slot);
+                if (!bestSlots.some(existingSlot => JSON.stringify(existingSlot) === slotString)) {
+                    bestSlots.push(slot);
+                }
             }
         }
 
