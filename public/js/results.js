@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const availabilities = await response.json(); // Parse the JSON response
         console.log('Availabilities:', availabilities);
-        
+
         // Calculate  the number of people who selected each day
         const daysCount = {};
         availabilities.forEach(({ days }) => {
@@ -58,24 +58,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Calculate the best N-day slot (e.g., 7 days)
         const N = 7;
-        let bestSlot = [];
+        let bestSlots = [];
         let maxMean = 0;
 
         for (let i = 0; i <= dateRange.length - N; i++) {
-            const slot = dateRange.slice(i, i + N);
-            const mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
+            let slot = dateRange.slice(i, i + N);
+            let mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
 
+            // Expand the slot if adjacent days have the same mean
+            let start = i;
+            let end = i + N - 1;
+
+            while (start > 0 && (daysCount[dateRange[start - 1]] || 0) === mean) {
+                start--;
+                slot = dateRange.slice(start, end + 1);
+                mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / slot.length;
+            }
+
+            while (end < dateRange.length - 1 && (daysCount[dateRange[end + 1]] || 0) === mean) {
+                end++;
+                slot = dateRange.slice(start, end + 1);
+                mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / slot.length;
+            }
+
+            // Check if this slot has the maximum mean
             if (mean > maxMean) {
                 maxMean = mean;
-                bestSlot = slot;
+                bestSlots = [slot]; // Reset to only this slot
+            } else if (mean === maxMean) {
+                bestSlots.push(slot); // Add this slot to the list of best slots
             }
         }
 
-        // Display the best N-day slot
-        if (bestSlot.length > 0) {
-            const firstDay = bestSlot[0].split('-').slice(1).join('/');
-            const lastDay = bestSlot[bestSlot.length - 1].split('-').slice(1).join('/');
-            slotInfo.textContent = `Dal ${firstDay} al ${lastDay}   media: ${maxMean.toFixed(2)} persone/giorno`;
+        // Display the best slots
+        if (bestSlots.length > 0) {
+            slotInfo.textContent = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:\n`;
+
+            bestSlots.forEach((slot, index) => {
+                const firstDay = slot[0].split('-').slice(1).join('/');
+                const lastDay = slot[slot.length - 1].split('-').slice(1).join('/');
+                slotInfo.textContent += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}\n`;
+            });
         } else {
             slotInfo.textContent = 'Nessun dato disponibile';
         }
