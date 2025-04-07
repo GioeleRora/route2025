@@ -36,6 +36,35 @@ const fetchBlobData = async () => {
     }
 };
 
+const saveDataToBlob = async (data) => {
+    try {
+        let existingData = [];
+        try {
+            const file = await get(blobUrl); // Attempt to fetch the blob
+            if (file) {
+                const content = file.data;
+                existingData = Array.isArray(content) ? content : []; // Parse existing data
+            }
+        } catch (err) {
+            if (err.response && err.response.status === 404) {
+                console.warn('Blob not found, initializing new blob.');
+            } else {
+                throw new Error('Error fetching existing blob data: ' + err.message);
+            }
+        }
+        existingData.push(data);
+
+        await put(blobUrl, JSON.stringify(existingData, null, 2), {
+            contentType: 'application/json',
+        });
+        
+        console.log('Data successfully saved to blob:', blobUrl);
+    } catch (err) {
+        console.error('Error saving data to blob:', err.message);
+        throw new Error('Failed to save data to blob');
+    }
+};
+
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
 
@@ -44,24 +73,15 @@ app.post('/api/availability', async (req, res) => {
     }
 
     try {
-        // Fetch existing data from the blob
         let availabilities = await fetchBlobData();
-
-        // Check if the name already exists
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
         if (existingIndex !== -1) {
-            // Replace the existing entry
             availabilities[existingIndex] = { name, days };
         } else {
-            // Add the new availability
             availabilities.push({ name, days });
         }
 
-        // Write the updated data back to the blob using 'put'
-        const { url } = await put(blobName, JSON.stringify(availabilities, null, 2), {
-            access: 'public',
-            contentType: 'application/json',
-        });
+        await saveDataToBlob(availabilities);
 
         res.status(200).json({ message: 'Availability submitted successfully', url });
     } catch (err) {
@@ -72,7 +92,6 @@ app.post('/api/availability', async (req, res) => {
 
 app.get('/api/availability', async (req, res) => {
     try {
-        // Fetch existing data from the blob
         const availabilities = await fetchBlobData();
         res.status(200).json(availabilities);
     } catch (err) {
@@ -95,5 +114,8 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-module.exports = { fetchBlobData };
-module.exports = app;
+module.exports = {
+    fetchBlobData,
+    saveDataToBlob,
+    app
+};
