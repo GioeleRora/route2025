@@ -55,6 +55,7 @@ const saveDataToBlob = async (data) => {
         existingData.push(data);    
 
         await put(blobUrl, JSON.stringify(existingData, null, 2), {
+            access: 'public',
             contentType: 'application/json',
         });
         
