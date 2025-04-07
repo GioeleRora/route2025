@@ -21,34 +21,50 @@ const fetchBlobData = async () => {
 
         if (!response.data || Object.keys(response.data).length === 0) {
             console.warn('Blob is empty, returning empty array.');
-            return []; // Return an empty array if the blob is empty
+            return []; // Se il blob è vuoto, ritorna un array vuoto
         }
 
-        // Return the parsed JSON data directly
-        return response.data;
+        // Assicurati che i dati siano un array
+        return Array.isArray(response.data) ? response.data : [];
     } catch (err) {
         if (err.response && err.response.status === 404) {
             console.warn('Blob not found, returning empty array.');
-            return []; // Return an empty array if the blob does not exist
+            return []; // Se il blob non esiste, ritorna un array vuoto
         }
         console.error('Error loading data from blob:', err.message, err.stack);
         throw new Error('Failed to load data from blob');
     }
 };
 
+
 const saveDataToBlob = async (data) => {
     try {
-        await put(blobName, JSON.stringify(data, null, 2), {
+        let existingData = await fetchBlobData(); // Recupera i dati esistenti dal blob
+
+        // Trova l'indice dell'elemento che ha lo stesso nome
+        const existingIndex = existingData.findIndex(entry => entry.name === data.name);
+
+        if (existingIndex !== -1) {
+            // Se il nome esiste, aggiorna i dati esistenti
+            existingData[existingIndex] = { ...existingData[existingIndex], days: data.days };
+        } else {
+            // Se il nome non esiste, aggiungi un nuovo elemento
+            existingData.push(data);
+        }
+
+        // Salva i dati aggiornati nel blob
+        await put(blobName, JSON.stringify(existingData, null, 2), {
             access: 'public',
             contentType: 'application/json',
         });
-        
+
         console.log('Data successfully saved to blob:', blobUrl);
     } catch (err) {
         console.error('Error saving data to blob:', err.message);
         throw new Error('Failed to save data to blob');
     }
 };
+
 
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
