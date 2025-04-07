@@ -38,23 +38,6 @@ const fetchBlobData = async () => {
 
 const saveDataToBlob = async (data) => {
     try {
-        let existingData = [];
-        try {
-            const file = await axios.get(blobUrl); // Attempt to fetch the blob
-            if (file) {
-                const content = file.data;
-                existingData = Array.isArray(content) ? content : []; // Parse existing data
-            }
-        } catch (err) {
-            if (err.response && err.response.status === 404) {
-                console.warn('Blob not found, initializing new blob.');
-                existingData = [];
-            } else {
-                throw new Error('Error fetching existing blob data: ' + err.message);
-            }
-        }
-        existingData.push(data);    
-
         await put(blobName, JSON.stringify(existingData, null, 2), {
             access: 'public',
             contentType: 'application/json',
