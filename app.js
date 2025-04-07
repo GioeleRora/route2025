@@ -48,6 +48,7 @@ const saveDataToBlob = async (data) => {
         } catch (err) {
             if (err.response && err.response.status === 404) {
                 console.warn('Blob not found, initializing new blob.');
+                existingData = [];
             } else {
                 throw new Error('Error fetching existing blob data: ' + err.message);
             }
