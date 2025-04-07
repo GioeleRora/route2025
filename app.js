@@ -38,7 +38,7 @@ const fetchBlobData = async () => {
 
 const saveDataToBlob = async (data) => {
     try {
-        await put(blobName, JSON.stringify(existingData, null, 2), {
+        await put(blobName, JSON.stringify(data, null, 2), {
             access: 'public',
             contentType: 'application/json',
         });
