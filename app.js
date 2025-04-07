@@ -114,8 +114,4 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-module.exports = {
-    fetchBlobData,
-    saveDataToBlob,
-    app
-};
+module.exports = app;
