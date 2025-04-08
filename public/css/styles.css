@@ -668,6 +668,16 @@ button:hover {
     #results-title {
         font-size: 28px;
     }
+
+    /* Calendar mobile improvements - add consistent sizing rules here */
+    .calendar-day {
+        aspect-ratio: 1/1;
+        box-sizing: border-box;
+    }
+    
+    .calendar-day.placeholder {
+        aspect-ratio: 1/1;
+    }
 }
 
 /* Small mobile devices */
@@ -780,16 +790,6 @@ button:hover {
         padding: 4px 8px;
         font-size: 10px;
     }
-}
-
-/* Ensure all days have consistent height/width */
-.calendar-day {
-    aspect-ratio: 1/1;
-    box-sizing: border-box;
-}
-
-.calendar-day.placeholder {
-    aspect-ratio: 1/1;
 }
 
 /* Touch improvements for all devices */
