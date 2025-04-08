@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endDate = new Date('2025-08-31');
     let isDragging = false;
     let startDayIndex = null;
+    let isSelectMode = true; // Track whether we are in select or deselect mode
 
     // Generate calendar
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
@@ -28,13 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
             isDragging = true;
             const index = Array.from(calendarContainer.children).indexOf(dayDiv);
             startDayIndex = index;
-            toggleDaySelection(dayDiv); // Toggle selection or deselection
+            // Determine if we're selecting or deselecting based on current state
+            isSelectMode = !dayDiv.classList.contains('selected');
+            toggleDaySelection(dayDiv, isSelectMode); // Toggle based on mode
         });
 
         dayDiv.addEventListener('mouseenter', () => {
             if (isDragging) {
                 const index = Array.from(calendarContainer.children).indexOf(dayDiv);
-                selectDaysInPattern(startDayIndex, index); // Select days in the described pattern
+                selectDaysInPattern(startDayIndex, index, isSelectMode); // Pass selection mode
             }
         });
 
@@ -45,7 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
             isDragging = true;
             const index = Array.from(calendarContainer.children).indexOf(dayDiv);
             startDayIndex = index;
-            toggleDaySelection(dayDiv);
+            // Determine if we're selecting or deselecting based on current state
+            isSelectMode = !dayDiv.classList.contains('selected');
+            toggleDaySelection(dayDiv, isSelectMode); // Toggle based on mode
         });
 
         dayDiv.addEventListener('touchmove', (e) => {
@@ -59,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check if the touch is over a calendar day
             if (elementAtTouch && elementAtTouch.classList.contains('calendar-day')) {
                 const index = Array.from(calendarContainer.children).indexOf(elementAtTouch);
-                selectDaysInPattern(startDayIndex, index);
+                selectDaysInPattern(startDayIndex, index, isSelectMode);
             }
         });
 
@@ -85,12 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
 
     // Function to toggle day selection
-    function toggleDaySelection(dayDiv) {
-        dayDiv.classList.toggle('selected'); // Add or remove the 'selected' class
+    function toggleDaySelection(dayDiv, selectMode) {
+        if (selectMode) {
+            dayDiv.classList.add('selected');
+        } else {
+            dayDiv.classList.remove('selected');
+        }
     }
 
     // Function to select days in the described pattern
-    function selectDaysInPattern(startIndex, endIndex) {
+    function selectDaysInPattern(startIndex, endIndex, selectMode) {
         const totalColumns = 7; // Number of columns in the grid
         const startRow = Math.floor(startIndex / totalColumns);
         const endRow = Math.floor(endIndex / totalColumns);
@@ -99,30 +108,88 @@ document.addEventListener('DOMContentLoaded', () => {
         if (startRow === endRow) {
             // If dragging within the same row, select all days between startIndex and endIndex
             for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
-                calendarContainer.children[i].classList.add('selected');
+                toggleDaySelection(calendarContainer.children[i], selectMode);
             }
         } else if (endRow > startRow) {
             // Select days in the starting row from startIndex to the end of the row
             for (let i = startIndex; i < (startRow + 1) * totalColumns; i++) {
-                calendarContainer.children[i].classList.add('selected');
+                toggleDaySelection(calendarContainer.children[i], selectMode);
             }
 
             // Select all days in rows between the start and end rows
             for (let row = startRow + 1; row < endRow; row++) {
                 for (let i = row * totalColumns; i < (row + 1) * totalColumns; i++) {
-                    calendarContainer.children[i].classList.add('selected');
+                    toggleDaySelection(calendarContainer.children[i], selectMode);
                 }
             }
 
             // Select days in the ending row from the start to endIndex
             for (let i = endRow * totalColumns; i <= endIndex; i++) {
-                calendarContainer.children[i].classList.add('selected');
+                toggleDaySelection(calendarContainer.children[i], selectMode);
             }
         }
     }
 
+    // Add instructions and clear button
     const form = document.getElementById('availability-form');
     const resultDiv = document.getElementById('result');
+    
+    // Add instructions element
+    const instructionsDiv = document.createElement('div');
+    instructionsDiv.className = 'calendar-instructions';
+    instructionsDiv.innerHTML = `
+        <p>🖱️ <strong>Istruzioni:</strong></p>
+        <p>- Trascina per <span style="color: green;">selezionare</span> i giorni disponibili</p>
+        <p>- Trascina su giorni già selezionati per <span style="color: red;">deselezionare</span></p>
+    `;
+    form.insertBefore(instructionsDiv, form.querySelector('button'));
+    
+    // Add a clear all button
+    const clearButton = document.createElement('button');
+    clearButton.type = 'button'; // Prevent form submission
+    clearButton.textContent = 'Cancella Selezioni';
+    clearButton.className = 'clear-button';
+    clearButton.addEventListener('click', () => {
+        document.querySelectorAll('#calendar .calendar-day.selected').forEach(day => {
+            day.classList.remove('selected');
+        });
+    });
+    form.insertBefore(clearButton, form.querySelector('button'));
+
+    // Add visual cue for selection mode
+    calendarContainer.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('calendar-day')) {
+            if (!e.target.classList.contains('selected')) {
+                calendarContainer.classList.add('select-mode');
+                calendarContainer.classList.remove('deselect-mode');
+            } else {
+                calendarContainer.classList.add('deselect-mode');
+                calendarContainer.classList.remove('select-mode');
+            }
+        }
+    });
+    
+    calendarContainer.addEventListener('touchstart', (e) => {
+        const touchedElement = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        if (touchedElement && touchedElement.classList.contains('calendar-day')) {
+            if (!touchedElement.classList.contains('selected')) {
+                calendarContainer.classList.add('select-mode');
+                calendarContainer.classList.remove('deselect-mode');
+            } else {
+                calendarContainer.classList.add('deselect-mode');
+                calendarContainer.classList.remove('select-mode');
+            }
+        }
+    });
+    
+    // Reset visual mode when done dragging
+    document.addEventListener('mouseup', () => {
+        calendarContainer.classList.remove('select-mode', 'deselect-mode');
+    });
+    
+    document.addEventListener('touchend', () => {
+        calendarContainer.classList.remove('select-mode', 'deselect-mode');
+    });
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
