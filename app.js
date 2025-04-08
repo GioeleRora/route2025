@@ -208,7 +208,12 @@ app.get('/', (req, res) => {
 
 // Add route for the form to add new availability
 app.get('/add', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'views', 'add.html'));
+});
+
+// Keep compatibility with old routes
+app.get('/index.html', (req, res) => {
+    res.redirect('/add');
 });
 
 // Add route for the modify page
@@ -230,6 +235,10 @@ app.get('/js/results.js', (req, res) => {
 
 app.get('/js/modify.js', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public/js', 'modify.js'));
+});
+
+app.get('/js/add.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/js', 'add.js'));
 });
 
 // Add a database connection test endpoint 
