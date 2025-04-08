@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchButton = document.getElementById('search-button');
     const nameInput = document.getElementById('name-search');
     const userDataDiv = document.getElementById('user-data');
-    const userNameDisplay = document.getElementById('user-name-display');
     const messageDiv = document.getElementById('message');
     const calendarContainer = document.getElementById('calendar');
     const form = document.getElementById('availability-form');
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Show the user data section
             userDataDiv.style.display = 'block';
-            userNameDisplay.textContent = `Nome: ${userData.name}`;
             
             // Initialize calendar
             initializeCalendar(userData.days);
