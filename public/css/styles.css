@@ -696,6 +696,7 @@ button:hover {
         flex-direction: row;
         justify-content: center;
         gap: 10px;
+        width: 100%;
     }
     
     #luglio, #agosto {
@@ -704,15 +705,16 @@ button:hover {
         padding: 6px 10px;
         margin: 3px;
         font-size: 12px;
+        max-width: 45%;
     }
     
     #luglio-agosto-container {
-        flex-direction: column;
+        flex-direction: row;
     }
     
     #luglio, #agosto {
-        width: 100%;
-        margin: 3px 0;
+        width: auto;
+        margin: 3px;
     }
     
     .home-container {
