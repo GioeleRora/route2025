@@ -29,7 +29,7 @@ async function testConnection() {
         console.error('✗ Connection with DATABASE_URL failed:', err.message);
     }
 
-    // Try with direct parameters
+    // Try with direct parameters 
     console.log('\nTesting connection with direct parameters...');
     try {
         const connectionString = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}/${process.env.PGDATABASE}?sslmode=require`;
