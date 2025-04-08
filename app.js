@@ -37,33 +37,19 @@ const fetchBlobData = async () => {
 };
 
 
-const saveDataToBlob = async (data) => {
+const saveDataToBlob = async (dataArray) => {
     try {
-        let existingData = await fetchBlobData(); // Recupera i dati esistenti dal blob
-
-        // Trova l'indice dell'elemento che ha lo stesso nome
-        const existingIndex = existingData.findIndex(entry => entry.name === data.name);
-
-        if (existingIndex !== -1) {
-            // Se il nome esiste, aggiorna i dati esistenti
-            existingData[existingIndex] = { ...existingData[existingIndex], days: data.days };
-        } else {
-            // Se il nome non esiste, aggiungi un nuovo elemento
-            existingData.push(data);
-        }
-
-        // Salva i dati aggiornati nel blob
-        await put(blobName, JSON.stringify(existingData, null, 2), {
+        await put(blobName, JSON.stringify(dataArray, null, 2), {
             access: 'public',
             contentType: 'application/json',
         });
-
         console.log('Data successfully saved to blob:', blobUrl);
     } catch (err) {
         console.error('Error saving data to blob:', err.message);
         throw new Error('Failed to save data to blob');
     }
 };
+
 
 
 app.post('/api/availability', async (req, res) => {
@@ -76,6 +62,7 @@ app.post('/api/availability', async (req, res) => {
     try {
         let availabilities = await fetchBlobData();
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
+
         if (existingIndex !== -1) {
             availabilities[existingIndex] = { name, days };
         } else {
@@ -90,6 +77,7 @@ app.post('/api/availability', async (req, res) => {
         res.status(500).json({ error: 'Error interacting with Vercel Blob post 50:', details: err.message });
     }
 });
+
 
 app.get('/api/availability', async (req, res) => {
     try {
