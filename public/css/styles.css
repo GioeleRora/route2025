@@ -657,6 +657,17 @@ button:hover {
         hyphens: auto;
         overflow: hidden;
     }
+    
+    /* Results page improvements */
+    #slot-info {
+        width: 95%;
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    #results-title {
+        font-size: 28px;
+    }
 }
 
 /* Small mobile devices */
@@ -715,6 +726,22 @@ button:hover {
         font-size: 9px;
         font-weight: bold;
     }
+    
+    /* Results page improvements for small screens */
+    #slot-info {
+        width: 100%;
+        margin: 10px 0;
+        padding: 12px 5px;
+        font-size: 13px;
+        line-height: 1.4;
+        border-width: 1px;
+    }
+    
+    #best-slot {
+        width: 100%;
+        padding: 0 5px;
+        box-sizing: border-box;
+    }
 }
 
 /* Extra small devices */
@@ -728,6 +755,11 @@ button:hover {
     .calendar-header, .calendar-header-result {
         font-size: 7px;
         padding: 2px 1px;
+    }
+    
+    #slot-info {
+        padding: 8px 3px;
+        font-size: 12px;
     }
 }
 
