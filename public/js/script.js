@@ -134,17 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('availability-form');
     const resultDiv = document.getElementById('result');
     
-    // Add a clear all button
-    const clearButton = document.createElement('button');
-    clearButton.type = 'button'; // Prevent form submission
-    clearButton.textContent = 'Cancella Selezioni';
-    clearButton.className = 'clear-button';
-    clearButton.addEventListener('click', () => {
-        document.querySelectorAll('#calendar .calendar-day.selected').forEach(day => {
-            day.classList.remove('selected');
-        });
-    });
-    form.insertBefore(clearButton, form.querySelector('button'));
 
     // Add visual cue for selection mode
     calendarContainer.addEventListener('mousedown', (e) => {

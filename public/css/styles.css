@@ -10,6 +10,11 @@ h1 {
     text-align: center;
 }
 
+h2 {
+    color: #c8fcf0;
+    text-align: center;
+}
+
 form {
     margin-bottom: 20px;
 }
