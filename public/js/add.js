@@ -8,15 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let startDayIndex = null;
     let isSelectMode = true; // Track whether we are in select or deselect mode
     
-    // Save the header elements before generating the calendar
-    const headerElements = Array.from(calendarContainer.querySelectorAll('.calendar-header'));
-    
-    // Clear the calendar (except headers)
-    calendarContainer.innerHTML = '';
-    
-    // Re-add the header elements
-    headerElements.forEach(header => calendarContainer.appendChild(header));
-    
     // Add offset for the first day of the month
     const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const offset = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); // Adjust for Monday as the first day

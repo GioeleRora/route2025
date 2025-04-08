@@ -609,6 +609,124 @@ button:hover {
     text-align: center;
 }
 
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+    .home-button {
+        padding: 20px;
+        font-size: 18px;
+    }
+    
+    .search-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    #name-search {
+        width: 80%;
+    }
+
+    /* Calendar mobile improvements */
+    #calendar {
+        width: 95%;
+        gap: 5px;
+    }
+    
+    .calendar-day {
+        padding: 8px 5px;
+        font-size: 14px;
+        border-width: 1px;
+    }
+    
+    .calendar-header, .calendar-header-result {
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+    
+    /* Form and buttons mobile improvements */
+    #name {
+        width: 90%;
+    }
+    
+    button {
+        padding: 15px 30px;
+        font-size: 16px;
+    }
+    
+    /* Results page improvements */
+    #slot-info {
+        width: 90%;
+        font-size: 14px;
+        padding: 8px;
+    }
+    
+    #results-title {
+        font-size: 28px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .calendar-day {
+        padding: 5px 3px;
+        font-size: 12px;
+    }
+    
+    .calendar-header, .calendar-header-result {
+        padding: 5px 3px;
+        font-size: 10px;
+    }
+    
+    #luglio-agosto-container {
+        flex-direction: column;
+    }
+    
+    #luglio, #agosto {
+        width: 100%;
+        margin: 3px 0;
+    }
+    
+    .home-container {
+        width: 95%;
+        padding: 10px;
+    }
+    
+    button {
+        padding: 12px 25px;
+        font-size: 14px;
+    }
+}
+
+/* Touch improvements for all devices */
+.calendar-day {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    transition: background-color 0.2s ease;
+}
+
+.calendar-day:active {
+    transform: scale(0.95);
+}
+
+button {
+    touch-action: manipulation;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+/* Visual feedback for touch */
+.calendar-day.selected {
+    animation: pulse 0.3s ease-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 @media (max-width: 768px) {
     .home-button {
         padding: 20px;
