@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
             dayDiv.style.backgroundColor = 'violet'; // Violet for August
         }
 
-        // Add click event to toggle selection
+        // Add event listeners for both mouse and touch
+        // Mouse events
         dayDiv.addEventListener('mousedown', (e) => {
             isDragging = true;
             const index = Array.from(calendarContainer.children).indexOf(dayDiv);
@@ -37,14 +38,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Touch events for mobile devices
+        dayDiv.addEventListener('touchstart', (e) => {
+            // Prevent default to avoid scrolling while selecting
+            e.preventDefault();
+            isDragging = true;
+            const index = Array.from(calendarContainer.children).indexOf(dayDiv);
+            startDayIndex = index;
+            toggleDaySelection(dayDiv);
+        });
+
+        dayDiv.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            // Get the touch position
+            const touch = e.touches[0];
+            // Find which element is under the touch point
+            const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Check if the touch is over a calendar day
+            if (elementAtTouch && elementAtTouch.classList.contains('calendar-day')) {
+                const index = Array.from(calendarContainer.children).indexOf(elementAtTouch);
+                selectDaysInPattern(startDayIndex, index);
+            }
+        });
+
         calendarContainer.appendChild(dayDiv);
     }
 
-    // Add event listeners to handle drag selection
+    // Add event listeners to handle drag selection for both mouse and touch
     document.addEventListener('mouseup', () => {
         isDragging = false;
         startDayIndex = null;
     });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        startDayIndex = null;
+    });
+
+    // Prevent scrolling when touch-selecting in the calendar
+    calendarContainer.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     // Function to toggle day selection
     function toggleDaySelection(dayDiv) {
