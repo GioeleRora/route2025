@@ -17,15 +17,17 @@ const blobUrl = `https://aveoe7yulyygayoq.public.blob.vercel-storage.com/${blobN
 const fetchBlobData = async () => {
     try {
         console.log('Fetching data from blob:', blobUrl);
-        const response = await axios.get(blobUrl);
 
-        if (!response.data || Object.keys(response.data).length === 0) {
+        const response = await axios.get(blobUrl, { responseType: 'text' });
+        const data = JSON.parse(response.data);
+
+        if (!data || Object.keys(data).length === 0) {
             console.warn('Blob is empty, returning empty array.');
             return []; // Se il blob è vuoto, ritorna un array vuoto
         }
 
         // Assicurati che i dati siano un array
-        return Array.isArray(response.data) ? response.data : [];
+        return Array.isArray(data) ? data : [];
     } catch (err) {
         if (err.response && err.response.status === 404) {
             console.warn('Blob not found, returning empty array.');
