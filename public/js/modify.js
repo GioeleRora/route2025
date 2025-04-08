@@ -62,6 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const startDate = new Date('2025-07-01');
         const endDate = new Date('2025-08-31');
         
+        // Add offset for the first day of the month
+        const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const offset = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); // Adjust for Monday as the first day
+        
+        // Add placeholder elements for proper alignment
+        for (let i = 0; i < offset; i++) {
+            const placeholderDiv = document.createElement('div');
+            placeholderDiv.className = 'calendar-day placeholder'; // Add a class for styling
+            calendarContainer.appendChild(placeholderDiv);
+        }
+        
         // Generate calendar
         for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
             const dayDiv = document.createElement('div');
