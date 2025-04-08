@@ -1,32 +1,83 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { Client } = require('pg'); // Import pg for PostgreSQL connection
+const { neon } = require('@neondatabase/serverless');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
-app.use(express.static('views')); // Serve index.html from 'views'
-app.use(express.static('public')); // Serve CSS and JS directly from 'public'
-
-// Set up PostgreSQL client with the Neon connection string
-const client = new Client({
-    connectionString: process.env.DATABASE_URL, // Vercel environment variable
-    ssl: {
-        rejectUnauthorized: false, // SSL is required for Neon
-    },
+// Print available environment variables (for debugging)
+console.log('Available environment variables:', {
+    DATABASE_URL: process.env.DATABASE_URL ? 'Set (hidden for security)' : 'Not set',
+    POSTGRES_URL: process.env.POSTGRES_URL ? 'Set (hidden for security)' : 'Not set',
 });
 
-client.connect().catch(err => {
-    console.error('Error connecting to Neon database:', err.message);
-});
+// Choose the best available connection URL
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+    console.error('ERROR: No database connection string available. Please check your .env file.');
+    process.exit(1);
+}
+
+// Create SQL executor using neon's serverless driver
+const sql = neon(connectionString);
+
+// Initialize database connection with retries
+async function initializeDbConnection(retries = 5) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            console.log(`Connection attempt ${attempt} of ${retries}...`);
+            // Test if the database is properly set up
+            const testResult = await sql`SELECT NOW()`;
+            console.log('✓ Successfully connected to Neon database');
+            console.log('✓ Database connection test successful:', testResult[0]);
+            
+            // Check if availability table exists, create if not
+            const tableCheck = await sql`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public'
+                    AND table_name = 'availability'
+                );
+            `;
+            
+            if (!tableCheck[0].exists) {
+                console.log('Creating availability table...');
+                await sql`
+                    CREATE TABLE availability (
+                        name TEXT PRIMARY KEY,
+                        days JSONB NOT NULL
+                    );
+                `;
+                console.log('✓ Availability table created successfully');
+            } else {
+                console.log('✓ Availability table already exists');
+            }
+            
+            return true;
+        } catch (err) {
+            console.error(`Database connection attempt ${attempt} failed:`, err.message);
+            
+            if (attempt < retries) {
+                const delay = 2000 * attempt; // Exponential backoff
+                console.log(`Retrying in ${delay/1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                console.error('All connection attempts failed. Please check your database configuration.');
+                return false;
+            }
+        }
+    }
+    return false;
+}
 
 // Helper function to fetch data from Neon
 const fetchAvailabilityData = async () => {
     try {
-        const res = await client.query('SELECT * FROM availability'); // Query for availability data
-        return res.rows; // Return rows (data)
+        const rows = await sql`SELECT * FROM availability`; // Query for availability data
+        return rows; // Return rows (data)
     } catch (err) {
         console.error('Error fetching data from database:', err.message);
         throw new Error('Failed to fetch data from Neon database');
@@ -40,13 +91,12 @@ const saveAvailabilityData = async (dataArray) => {
         for (const entry of dataArray) {
             const { name, days } = entry;
             // Insert or update data in Neon
-            await client.query(
-                `INSERT INTO availability (name, days) 
-                 VALUES ($1, $2) 
-                 ON CONFLICT (name) 
-                 DO UPDATE SET days = EXCLUDED.days`, 
-                [name, JSON.stringify(days)]
-            );
+            await sql`
+                INSERT INTO availability (name, days) 
+                VALUES (${name}, ${JSON.stringify(days)}) 
+                ON CONFLICT (name) 
+                DO UPDATE SET days = ${JSON.stringify(days)}
+            `;
         }
         console.log('Data successfully saved to Neon database');
     } catch (err) {
@@ -103,9 +153,35 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+// Add a database connection test endpoint
+app.get('/api/dbtest', async (req, res) => {
+    try {
+        const result = await sql`SELECT NOW() as server_time`;
+        res.status(200).json({
+            status: 'success',
+            message: 'Database connection is working',
+            serverTime: result[0].server_time
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Database connection failed',
+            error: err.message
+        });
+    }
+});
+
+// Start the server only after trying to establish DB connection
+initializeDbConnection().then(connected => {
+    if (connected) {
+        app.listen(port, () => {
+            console.log(`✓ Server is running on port ${port}`);
+            console.log(`• Try the database test endpoint: http://localhost:${port}/api/dbtest`);
+        });
+    } else {
+        console.error('✗ Server not started due to database connection failure');
+        process.exit(1); // Exit the application with an error code
+    }
 });
 
 module.exports = app;
