@@ -65,7 +65,7 @@ app.post('/api/availability', async (req, res) => {
         let availabilities = await fetchBlobData();
         availabilities = availabilities.flat().filter(entry => entry && entry.name && Array.isArray(entry.days));
 
-
+        const existingIndex = availabilities.findIndex(entry => entry.name === name);
         if (existingIndex !== -1) {
             availabilities[existingIndex] = { name, days };
         } else {
