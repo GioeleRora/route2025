@@ -153,7 +153,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
 
-// Add a database connection test endpoint
+// Add a database connection test endpoint 
 app.get('/api/dbtest', async (req, res) => {
     try {
         const result = await sql`SELECT NOW() as server_time`;
