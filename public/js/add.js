@@ -180,12 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchend', () => {
         calendarContainer.classList.remove('select-mode', 'deselect-mode');
     });
-
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const name = document.getElementById('name').value;
-        resultDiv.textContent = `Thank you, ${name}, for submitting your availability!`;
-    });
 });
 
 document.getElementById('availability-form').addEventListener('submit', async (e) => {
