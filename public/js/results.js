@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             slotInfo.textContent = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:\n`;
 
             bestSlots.forEach((slot, index) => {
-                const firstDay = slot[0].split('-').slice(1).join('/');
+                const firstDay = slot[0].split('-').slice(1).reverse().join('/');
                 const lastDay = slot[slot.length - 1].split('-').slice(1).join('/');
                 slotInfo.textContent += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}\n`;
             });
