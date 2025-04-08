@@ -536,17 +536,21 @@ button:hover {
 .search-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 10px;
-    margin: 20px 0;
+    margin: 30px auto;
+    max-width: 500px;
+    text-align: center;
 }
 
 #name-search {
-    padding: 10px;
+    padding: 10px 15px;
     font-size: 16px;
     border-radius: 5px;
     border: 1px solid #ccc;
-    width: 60%;
-    max-width: 300px;
+    width: auto;
+    min-width: 200px;
+    flex-grow: 0;
 }
 
 #search-button {
@@ -557,10 +561,7 @@ button:hover {
     color: white;
     border: none;
     cursor: pointer;
-}
-
-#search-button:hover {
-    background-color: #3e8e41;
+    margin: 0;
 }
 
 .back-button {
