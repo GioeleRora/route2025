@@ -11,6 +11,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@neondatabase/serverless": "^1.0.0",
         "@vercel/blob": "^0.27.3",
         "axios": "^1.8.4",
         "body-parser": "^2.2.0",
