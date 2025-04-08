@@ -103,13 +103,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Display the best slots
         if (bestSlots.length > 0) {
-            slotInfo.textContent = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:\n`;
+            // Use innerHTML instead of textContent to properly handle line breaks
+            let slotsHtml = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:<br>`;
 
             bestSlots.forEach((slot, index) => {
                 const firstDay = slot[0].split('-').slice(1).reverse().join('/');
                 const lastDay = slot[slot.length - 1].split('-').slice(1).reverse().join('/');
-                slotInfo.textContent += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}\n`;
+                slotsHtml += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}<br>`;
             });
+            
+            slotInfo.innerHTML = slotsHtml;
         } else {
             slotInfo.textContent = 'Nessun dato disponibile';
         }
