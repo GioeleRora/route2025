@@ -7,6 +7,10 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Set up middleware for parsing request bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // Print available environment variables (for debugging)
 console.log('Available environment variables:', {
     DATABASE_URL: process.env.DATABASE_URL ? 'Set (hidden for security)' : 'Not set',
@@ -115,10 +119,13 @@ app.post('/api/availability', async (req, res) => {
 
     try {
         let availabilities = await fetchAvailabilityData();
+        console.log(availabilities); // Log fetched data for debugging
 
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
         if (existingIndex !== -1) {
-            availabilities[existingIndex] = { name, days };
+            const existingDays = availabilities[existingIndex].days;
+            const updatedDays = [...new Set([...existingDays, ...days])];
+            availabilities[existingIndex].days = updatedDays;
         } else {
             availabilities.push({ name, days });
         }
@@ -151,6 +158,18 @@ app.get('/results', (req, res) => {
 // Serve index.html for the / route
 app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
+});
+
+app.get('/css/styles.css', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/css', 'styles.css'));
+});
+
+app.get('/js/script.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/js', 'script.js'));
+});
+
+app.get('/js/results.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/js', 'results.js'));
 });
 
 // Add a database connection test endpoint
