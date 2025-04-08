@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Dati</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1>Modifica i Tuoi Dati</h1>
+    
+    <div class="search-container">
+        <input type="text" id="name-search" placeholder="Inserisci il tuo nome" required>
+        <button id="search-button">Cerca</button>
+    </div>
+    
+    <div id="user-data" style="display: none;">
+        <form id="availability-form">
+            <div id="luglio-agosto-container">
+                <h3 id="user-name-display">Nome: </h3>
+                <div id="luglio">Luglio</div>
+                <div id="agosto">Agosto</div>
+            </div>
+            <div id="calendar">
+                <div class="calendar-header">Lunedì</div>
+                <div class="calendar-header">Martedì</div>
+                <div class="calendar-header">Mercoledì</div>
+                <div class="calendar-header">Giovedì</div>
+                <div class="calendar-header">Venerdì</div>
+                <div class="calendar-header">Sabato</div>
+                <div class="calendar-header">Domenica</div>
+            </div>
+            <button type="submit" id="update-button">Aggiorna</button>
+        </form>
+    </div>
+    
+    <div id="message"></div>
+    
+    <button onclick="window.location.href='/'" class="back-button">Torna alla Home</button>
+    
+    <div id="end">Made by Gioele Rora</div>
+    
+    <script src="/js/modify.js"></script>
+</body>
+</html>

@@ -474,3 +474,147 @@ button:hover {
     font-size: 18px;
     font-weight: bold;
 }
+
+/* Home page styles */
+.home-container {
+    text-align: center;
+    width: 80%;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.home-button {
+    padding: 25px;
+    font-size: 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    color: white;
+}
+
+.add-button {
+    background-color: #4CAF50;
+}
+
+.add-button:hover {
+    background-color: #3e8e41;
+}
+
+.modify-button {
+    background-color: #2196F3;
+}
+
+.modify-button:hover {
+    background-color: #0b7dda;
+}
+
+.view-button {
+    background-color: #ff9800;
+}
+
+.view-button:hover {
+    background-color: #e68a00;
+}
+
+/* Modify page styles */
+.search-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+#name-search {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 60%;
+    max-width: 300px;
+}
+
+#search-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#search-button:hover {
+    background-color: #3e8e41;
+}
+
+.back-button {
+    padding: 15px 30px;
+    font-size: 16px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 20px auto;
+    display: block;
+}
+
+.back-button:hover {
+    background-color: #d32f2f;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px auto;
+    width: 80%;
+    text-align: center;
+    font-weight: bold;
+}
+
+.success-message {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px auto;
+    width: 80%;
+    text-align: center;
+    font-weight: bold;
+}
+
+#user-name-display {
+    color: white;
+    font-size: 18px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .home-button {
+        padding: 20px;
+        font-size: 18px;
+    }
+    
+    .search-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    #name-search {
+        width: 80%;
+    }
+}
