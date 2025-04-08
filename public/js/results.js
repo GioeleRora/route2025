@@ -18,8 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const availabilities = await response.json(); // Parse the JSON response
         console.log('Availabilities:', availabilities);
 
-        // Clear the calendar to avoid appending old data
-        calendarContainer.innerHTML = ''; // Resetta il contenitore del calendario
+        
 
         // Calculate the number of people who selected each day
         const daysCount = {};
