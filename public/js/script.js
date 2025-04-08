@@ -134,16 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('availability-form');
     const resultDiv = document.getElementById('result');
     
-    // Add instructions element
-    const instructionsDiv = document.createElement('div');
-    instructionsDiv.className = 'calendar-instructions';
-    instructionsDiv.innerHTML = `
-        <p>🖱️ <strong>Istruzioni:</strong></p>
-        <p>- Trascina per <span style="color: green;">selezionare</span> i giorni disponibili</p>
-        <p>- Trascina su giorni già selezionati per <span style="color: red;">deselezionare</span></p>
-    `;
-    form.insertBefore(instructionsDiv, form.querySelector('button'));
-    
     // Add a clear all button
     const clearButton = document.createElement('button');
     clearButton.type = 'button'; // Prevent form submission

@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             bestSlots.forEach((slot, index) => {
                 const firstDay = slot[0].split('-').slice(1).reverse().join('/');
-                const lastDay = slot[slot.length - 1].split('-').slice(1).join('/');
+                const lastDay = slot[slot.length - 1].split('-').reverse().slice(1).join('/');
                 slotInfo.textContent += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}\n`;
             });
         } else {
