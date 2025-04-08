@@ -241,6 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (response.ok) {
                 showMessage('Disponibilità aggiornata con successo!', 'success');
+                // Add redirect to results page after successful update
+                setTimeout(() => {
+                    window.location.href = '/results';
+                }, 1000); // Short delay to show the success message before redirecting
             } else {
                 const errorData = await response.json();
                 showMessage(`Errore: ${errorData.error}`, 'error');
