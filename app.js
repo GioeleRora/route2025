@@ -20,7 +20,7 @@ const fetchBlobData = async () => {
 
         const response = await axios.get(blobUrl, { responseType: 'text' });
         const data = JSON.parse(response.data);
-
+        console.log("Fetched data:", data);
         if (!data || Object.keys(data).length === 0) {
             console.warn('Blob is empty, returning empty array.');
             return []; // Se il blob è vuoto, ritorna un array vuoto
