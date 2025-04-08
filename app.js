@@ -1,8 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { put } = require('@vercel/blob'); // Import 'put' from '@vercel/blob'
+const { Client } = require('pg'); // Import pg for PostgreSQL connection
 const path = require('path');
-const axios = require('axios'); // Import axios for HTTP requests
 
 const app = express();
 const port = 3000;
@@ -11,49 +10,52 @@ app.use(bodyParser.json());
 app.use(express.static('views')); // Serve index.html from 'views'
 app.use(express.static('public')); // Serve CSS and JS directly from 'public'
 
-const blobName = 'route2025-m8mzcPGnaGB3DtnHVYShWZp0DywYxq';
-const blobUrl = `https://aveoe7yulyygayoq.public.blob.vercel-storage.com/${blobName}`;
+// Set up PostgreSQL client with the Neon connection string
+const client = new Client({
+    connectionString: process.env.DATABASE_URL, // Vercel environment variable
+    ssl: {
+        rejectUnauthorized: false, // SSL is required for Neon
+    },
+});
 
-const fetchBlobData = async () => {
+client.connect().catch(err => {
+    console.error('Error connecting to Neon database:', err.message);
+});
+
+// Helper function to fetch data from Neon
+const fetchAvailabilityData = async () => {
     try {
-        console.log('Fetching data from blob:', blobUrl);
-
-        const response = await axios.get(blobUrl, { responseType: 'text' });
-        const data = JSON.parse(response.data);
-        console.log("Fetched data:", data);
-        if (!data || Object.keys(data).length === 0) {
-            console.warn('Blob is empty, returning empty array.');
-            return []; // Se il blob è vuoto, ritorna un array vuoto
-        }
-
-        // Assicurati che i dati siano un array
-        return Array.isArray(data) ? data : [];
+        const res = await client.query('SELECT * FROM availability'); // Query for availability data
+        return res.rows; // Return rows (data)
     } catch (err) {
-        if (err.response && err.response.status === 404) {
-            console.warn('Blob not found, returning empty array.');
-            return []; // Se il blob non esiste, ritorna un array vuoto
-        }
-        console.error('Error loading data from blob:', err.message, err.stack);
-        throw new Error('Failed to load data from blob');
+        console.error('Error fetching data from database:', err.message);
+        throw new Error('Failed to fetch data from Neon database');
     }
 };
 
-
-const saveDataToBlob = async (dataArray) => {
+// Helper function to save data to Neon
+const saveAvailabilityData = async (dataArray) => {
     try {
-        await put(blobName, JSON.stringify(dataArray, null, 2), {
-            access: 'public',
-            contentType: 'application/json',
-        });
-        console.log('Data successfully saved to blob:', blobUrl);
+        // Assume "availability" table exists with columns "name" and "days"
+        for (const entry of dataArray) {
+            const { name, days } = entry;
+            // Insert or update data in Neon
+            await client.query(
+                `INSERT INTO availability (name, days) 
+                 VALUES ($1, $2) 
+                 ON CONFLICT (name) 
+                 DO UPDATE SET days = EXCLUDED.days`, 
+                [name, JSON.stringify(days)]
+            );
+        }
+        console.log('Data successfully saved to Neon database');
     } catch (err) {
-        console.error('Error saving data to blob:', err.message);
-        throw new Error('Failed to save data to blob');
+        console.error('Error saving data to Neon database:', err.message);
+        throw new Error('Failed to save data to Neon database');
     }
 };
 
-
-
+// Route to handle POST request to save availability
 app.post('/api/availability', async (req, res) => {
     const { name, days } = req.body;
 
@@ -62,8 +64,7 @@ app.post('/api/availability', async (req, res) => {
     }
 
     try {
-        let availabilities = await fetchBlobData();
-        availabilities = availabilities.flat().filter(entry => entry && entry.name && Array.isArray(entry.days));
+        let availabilities = await fetchAvailabilityData();
 
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
         if (existingIndex !== -1) {
@@ -72,23 +73,23 @@ app.post('/api/availability', async (req, res) => {
             availabilities.push({ name, days });
         }
 
-        await saveDataToBlob(availabilities);
+        await saveAvailabilityData(availabilities);
 
-        res.status(200).json({ message: 'Availability submitted successfully', blobUrl });
+        res.status(200).json({ message: 'Availability submitted successfully' });
     } catch (err) {
-        console.error('Error interacting with Vercel Blob post:', err.message, err.stack);
-        res.status(500).json({ error: 'Error interacting with Vercel Blob post 50:', details: err.message });
+        console.error('Error handling POST request:', err.message);
+        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
     }
 });
 
-
+// Route to handle GET request for availability
 app.get('/api/availability', async (req, res) => {
     try {
-        const availabilities = await fetchBlobData();
+        const availabilities = await fetchAvailabilityData();
         res.status(200).json(availabilities);
     } catch (err) {
-        console.error('Error interacting with Vercel Blob get:', err.message, err.stack);
-        res.status(500).json({ error: 'Error interacting with Vercel Blob get:', details: err.message });
+        console.error('Error handling GET request:', err.message);
+        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
     }
 });
 
@@ -97,6 +98,7 @@ app.get('/results', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
 });
 
+// Serve index.html for the / route
 app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'index.html'));
 });
