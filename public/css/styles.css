@@ -683,6 +683,20 @@ button:hover {
     }
     
     #luglio-agosto-container {
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    #luglio, #agosto {
+        width: auto;
+        flex: 0 1 auto;
+        padding: 6px 10px;
+        margin: 3px;
+        font-size: 12px;
+    }
+    
+    #luglio-agosto-container {
         flex-direction: column;
     }
     
@@ -760,6 +774,11 @@ button:hover {
     #slot-info {
         padding: 8px 3px;
         font-size: 12px;
+    }
+    
+    #luglio, #agosto {
+        padding: 4px 8px;
+        font-size: 10px;
     }
 }
 
