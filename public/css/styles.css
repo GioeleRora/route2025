@@ -783,6 +783,13 @@ button:hover {
         padding: 0 5px;
         box-sizing: border-box;
     }
+
+    .availability-count {
+        display: block;
+        margin: 5px auto;
+        padding: 2px 5px;
+        font-size: 12px;
+    }
 }
 
 /* Extra small devices */
@@ -838,6 +845,21 @@ button:active {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
+}
+
+/* Stile per il conteggio delle disponibilità */
+.availability-count {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 3px 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    font-size: 0.9em;
+}
+
+.availability-count strong {
+    color: darkgreen;
+    font-size: 1.1em;
 }
 
 @media (max-width: 768px) {

@@ -91,6 +91,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         let bestSlots = [];
         let maxMean = 0;
 
+        // Funzione per calcolare quante persone sono disponibili per tutti i giorni in uno slot
+        function countPeopleAvailableForEntireSlot(slot) {
+            return availabilities.filter(person => {
+                // Controlla se la persona è disponibile per tutti i giorni dello slot
+                return slot.every(day => person.days.includes(day));
+            }).length;
+        }
+
         for (let i = 0; i <= dateRange.length - N; i++) {
             // Verifica se questo slot contiene giorni disabilitati
             let containsDisabledDay = false;
@@ -141,7 +149,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             bestSlots.forEach((slot, index) => {
                 const firstDay = slot[0].split('-').slice(1).reverse().join('/');
                 const lastDay = slot[slot.length - 1].split('-').slice(1).reverse().join('/');
+                
+                // Calcola quante persone sono disponibili per tutto lo slot
+                const peopleAvailableForEntireSlot = countPeopleAvailableForEntireSlot(slot);
+                
                 slotsHtml += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}<br>`;
+                slotsHtml += `<span class="availability-count">Persone disponibili per tutti i ${slot.length} giorni: <strong>${peopleAvailableForEntireSlot}</strong></span><br><br>`;
             });
             
             slotInfo.innerHTML = slotsHtml;
