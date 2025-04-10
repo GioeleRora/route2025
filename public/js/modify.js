@@ -20,11 +20,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageDiv = document.getElementById('message');
     const calendarContainer = document.getElementById('calendar');
     const form = document.getElementById('availability-form');
+    const calendarPlaceholder = document.getElementById('calendar-placeholder');
     
     let currentUserData = null;
     let isDragging = false;
     let startDayIndex = null;
     let isSelectMode = true;
+
+    // Funzione per gestire la visibilità del placeholder basata sulla visibilità dei dati dell'utente
+    function updatePlaceholderVisibility() {
+        if (userDataDiv.style.display === 'none') {
+            calendarPlaceholder.style.display = 'block';
+        } else {
+            calendarPlaceholder.style.display = 'none';
+        }
+    }
+
+    // Inizializzazione
+    updatePlaceholderVisibility();
 
     // Set up search functionality
     searchButton.addEventListener('click', async () => {
@@ -44,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showMessage('Errore durante il recupero dei dati.', 'error');
                 }
                 userDataDiv.style.display = 'none';
+                updatePlaceholderVisibility();
                 return;
             }
             
@@ -52,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Show the user data section
             userDataDiv.style.display = 'block';
+            updatePlaceholderVisibility();
             
             // Initialize calendar
             initializeCalendar(userData.days);
@@ -60,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching user data:', error);
             showMessage('Errore di rete durante il recupero dei dati.', 'error');
+            userDataDiv.style.display = 'none';
+            updatePlaceholderVisibility();
         }
     });
     

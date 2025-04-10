@@ -3,6 +3,7 @@ body {
     margin: 20px;
     padding: 0;
     background-color: #2c1957;
+    padding-bottom: 120px; /* Spazio per il contenitore fisso */
 }
 
 h1 {
@@ -312,6 +313,35 @@ button:hover {
 #calendar .calendar-day {
     touch-action: none;
     user-select: none;
+}
+
+/* Contenitore fisso per il pulsante in fondo alla pagina */
+.bottom-fixed-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(44, 25, 87, 0.95); /* Colore di sfondo simile al body ma leggermente trasparente */
+    padding: 15px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    text-align: center;
+}
+
+/* Adattare il pulsante all'interno del contenitore fisso */
+.bottom-fixed-container .back-button {
+    margin: 0 auto 10px;
+}
+
+/* Spaziatore per mantenere lo spazio anche quando il calendario non è visibile */
+#calendar-placeholder {
+    height: 500px; /* Altezza approssimativa del calendario */
+    display: none;
+}
+
+/* Modificare lo stile del messaggio per assicurarsi che sia visibile sopra il pulsante fisso */
+#message {
+    margin-bottom: 100px; /* Spazio sufficiente per evitare che il messaggio sia nascosto dal pulsante fisso */
 }
 
 body {
