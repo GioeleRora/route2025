@@ -311,13 +311,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to show messages
     function showMessage(text, type) {
-        messageDiv.textContent = text;
-        messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
-        messageDiv.style.display = 'block';
+        // Rimuovi messaggi esistenti prima di mostrarne uno nuovo
+        const existingMessages = document.querySelectorAll('.error-message, .success-message');
+        existingMessages.forEach(msg => msg.remove());
         
-        // Hide the message after 5 seconds
+        // Crea un nuovo elemento messaggio
+        const messageElement = document.createElement('div');
+        messageElement.textContent = text;
+        messageElement.className = type === 'error' ? 'error-message' : 'success-message';
+        document.body.appendChild(messageElement);
+        
+        // Rimuovi il messaggio dopo l'animazione (5 secondi)
         setTimeout(() => {
-            messageDiv.style.display = 'none';
+            if (messageElement.parentNode) {
+                messageElement.parentNode.removeChild(messageElement);
+            }
         }, 5000);
     }
 });
