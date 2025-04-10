@@ -1,6 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script is connected and running!');
 
+    // Costante per controllare il blocco dei giorni specifici (26 luglio - 5 agosto)
+    const DISABLE_SPECIFIC_DAYS = true;
+
+    // Funzione per verificare se una data è nell'intervallo bloccato
+    function isDateDisabled(dateString) {
+        if (!DISABLE_SPECIFIC_DAYS) return false;
+        
+        const date = new Date(dateString);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        
+        // Controlla se è tra il 26 luglio e il 5 agosto inclusi
+        return (month === 7 && day >= 26) || (month === 8 && day <= 5);
+    }
+
     const calendarContainer = document.getElementById('calendar');
     const startDate = new Date('2025-07-01');
     const endDate = new Date('2025-08-31');
@@ -23,8 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
-        dayDiv.dataset.date = date.toISOString().split('T')[0]; // Store the date in a data attribute
+        const dateString = date.toISOString().split('T')[0];
+        dayDiv.dataset.date = dateString; // Store the date in a data attribute
         dayDiv.textContent = date.getDate(); // Display only the day number
+
+        // Verifica se la data è disabilitata
+        const isDisabled = isDateDisabled(dateString);
+        if (isDisabled) {
+            dayDiv.classList.add('disabled');
+        }
 
         // Apply background color based on the month
         const month = date.getMonth() + 1; // Months are 0-indexed
@@ -37,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add event listeners for both mouse and touch
         // Mouse events
         dayDiv.addEventListener('mousedown', (e) => {
+            if (isDisabled) return; // Non fare nulla se il giorno è disabilitato
+            
             isDragging = true;
             const index = Array.from(calendarContainer.children).indexOf(dayDiv);
             startDayIndex = index;
@@ -46,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         dayDiv.addEventListener('mouseenter', () => {
-            if (isDragging) {
+            if (isDragging && !isDisabled) { // Controlla anche qui se il giorno è disabilitato
                 const index = Array.from(calendarContainer.children).indexOf(dayDiv);
                 selectDaysInPattern(startDayIndex, index, isSelectMode); // Pass selection mode
             }
@@ -54,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Touch events for mobile devices
         dayDiv.addEventListener('touchstart', (e) => {
+            if (isDisabled) return; // Non fare nulla se il giorno è disabilitato
+            
             // Prevent default to avoid scrolling while selecting
             e.preventDefault();
             isDragging = true;
@@ -102,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to toggle day selection
     function toggleDaySelection(dayDiv, selectMode) {
+        // Non permettere la selezione di giorni disabilitati
+        if (dayDiv.classList.contains('disabled')) return;
+        
         if (selectMode) {
             dayDiv.classList.add('selected');
         } else {
@@ -119,24 +148,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (startRow === endRow) {
             // If dragging within the same row, select all days between startIndex and endIndex
             for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
-                toggleDaySelection(calendarContainer.children[i], selectMode);
+                // Salta i giorni disabilitati
+                if (!calendarContainer.children[i].classList.contains('disabled')) {
+                    toggleDaySelection(calendarContainer.children[i], selectMode);
+                }
             }
         } else if (endRow > startRow) {
             // Select days in the starting row from startIndex to the end of the row
             for (let i = startIndex; i < (startRow + 1) * totalColumns; i++) {
-                toggleDaySelection(calendarContainer.children[i], selectMode);
+                if (!calendarContainer.children[i].classList.contains('disabled')) {
+                    toggleDaySelection(calendarContainer.children[i], selectMode);
+                }
             }
 
             // Select all days in rows between the start and end rows
             for (let row = startRow + 1; row < endRow; row++) {
                 for (let i = row * totalColumns; i < (row + 1) * totalColumns; i++) {
-                    toggleDaySelection(calendarContainer.children[i], selectMode);
+                    if (!calendarContainer.children[i].classList.contains('disabled')) {
+                        toggleDaySelection(calendarContainer.children[i], selectMode);
+                    }
                 }
             }
 
             // Select days in the ending row from the start to endIndex
             for (let i = endRow * totalColumns; i <= endIndex; i++) {
-                toggleDaySelection(calendarContainer.children[i], selectMode);
+                if (!calendarContainer.children[i].classList.contains('disabled')) {
+                    toggleDaySelection(calendarContainer.children[i], selectMode);
+                }
             }
         }
     }

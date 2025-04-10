@@ -64,6 +64,21 @@ button:hover {
     font-weight: bold;
 }
 
+/* Aggiungere stile per i giorni disabilitati */
+.calendar-day.disabled {
+    background-color: #cccccc !important;
+    color: #888888;
+    text-decoration: line-through;
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: auto; /* Lascia attivi gli eventi per poter mostrare il cursore corretto */
+}
+
+.calendar-day.disabled:hover {
+    border-color: #ccc;
+    box-shadow: none;
+}
+
 .calendar-day.selected {
     background-color: green !important;
     color: white;
