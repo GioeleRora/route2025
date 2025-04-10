@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Costante per controllare il blocco dei giorni specifici (26 luglio - 5 agosto)
+    const DISABLE_SPECIFIC_DAYS = true;
+
+    // Funzione per verificare se una data è nell'intervallo bloccato
+    function isDateDisabled(dateString) {
+        if (!DISABLE_SPECIFIC_DAYS) return false;
+        
+        const date = new Date(dateString);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        
+        // Controlla se è tra il 26 luglio e il 5 agosto inclusi
+        return (month === 7 && day >= 26) || (month === 8 && day <= 5);
+    }
+
     const calendarContainer = document.getElementById('calendar');
     const slotInfo = document.getElementById('slot-info');
 
@@ -17,8 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const availabilities = await response.json(); // Parse the JSON response
         console.log('Availabilities:', availabilities);
-
-        
 
         // Calculate the number of people who selected each day
         const daysCount = {};
@@ -53,24 +66,44 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dateString = date.toISOString().split('T')[0];
             const count = daysCount[dateString] || 0;
 
-            // Set the background color based on the count
-            if (maxCount > 0) {
-                const opacity = count / maxCount; // Calculate opacity proportional to the count
-                dayDiv.style.backgroundColor = `rgba(0, 128, 0, ${opacity})`; // Green with varying opacity
+            // Verifica se la data è disabilitata
+            const isDisabled = isDateDisabled(dateString);
+            if (isDisabled) {
+                dayDiv.classList.add('disabled');
+                // Per i giorni disabilitati, mostra un colore speciale o aggiunge un'indicazione visiva
+                dayDiv.style.backgroundColor = '#cccccc';
             } else {
-                dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
+                // Set the background color based on the count for non-disabled days
+                if (maxCount > 0) {
+                    const opacity = count / maxCount; // Calculate opacity proportional to the count
+                    dayDiv.style.backgroundColor = `rgba(0, 128, 0, ${opacity})`; // Green with varying opacity
+                } else {
+                    dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
+                }
             }
 
             calendarContainer.appendChild(dayDiv);
             dateRange.push(dateString); // Add the date to the range
         }
 
-        // Calculate the best N-day slot (e.g., 7 days)
+        // Calculate the best N-day slot (e.g., 7 days) excluding disabled days
         const N = 7;
         let bestSlots = [];
         let maxMean = 0;
 
         for (let i = 0; i <= dateRange.length - N; i++) {
+            // Verifica se questo slot contiene giorni disabilitati
+            let containsDisabledDay = false;
+            for (let j = 0; j < N; j++) {
+                if (isDateDisabled(dateRange[i + j])) {
+                    containsDisabledDay = true;
+                    break;
+                }
+            }
+            
+            // Salta questo slot se contiene giorni disabilitati
+            if (containsDisabledDay) continue;
+            
             let slot = dateRange.slice(i, i + N);
             let mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
 
