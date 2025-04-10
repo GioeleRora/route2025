@@ -396,6 +396,45 @@ button:hover {
     margin-bottom: 100px; /* Spazio sufficiente per non essere nascosto dal bottone fisso */
 }
 
+/* Fix per la visualizzazione corretta della pagina di modifica */
+#user-data {
+    display: none;
+}
+
+#user-data #calendar {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.2s, opacity 0.2s;
+}
+
+#user-data.visible #calendar {
+    visibility: visible;
+    opacity: 1;
+}
+
+#update-button {
+    display: none;
+}
+
+#user-data.visible #update-button {
+    display: block;
+}
+
+/* Assicurati che la visibilità venga gestita correttamente su dispositivi mobili */
+@media (max-width: 768px) {
+    #user-data.visible #calendar {
+        display: grid !important;
+        visibility: visible;
+        opacity: 1;
+    }
+    
+    #user-data.visible #update-button {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
 /* Adattamenti per dispositivi mobili */
 @media (max-width: 768px) {
     #update-button {

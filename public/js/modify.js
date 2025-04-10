@@ -98,16 +98,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Define calendar headers to be added after successful search
+    const calendarHeaders = [
+        "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
+    ];
+
     // Function to initialize the calendar with user data
     function initializeCalendar(selectedDays) {
         console.log("Inizializzando calendario con", selectedDays.length, "giorni selezionati");
         
-        // Clear existing calendar days (except headers)
-        const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header'));
+        // Clear the calendar completely
         calendarContainer.innerHTML = '';
         
-        // Re-add headers
-        headers.forEach(header => calendarContainer.appendChild(header));
+        // Add the headers first
+        calendarHeaders.forEach(day => {
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'calendar-header';
+            headerDiv.textContent = day;
+            calendarContainer.appendChild(headerDiv);
+        });
         
         const startDate = new Date('2025-07-01');
         const endDate = new Date('2025-08-31');
