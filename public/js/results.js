@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Display the best slots
         if (bestSlots.length > 0) {
             // Use innerHTML instead of textContent to properly handle line breaks
-            let slotsHtml = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:<br>`;
+            let slotsHtml = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:`;
 
             bestSlots.forEach((slot, index) => {
                 const firstDay = slot[0].split('-').slice(1).reverse().join('/');
@@ -153,8 +153,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Calcola quante persone sono disponibili per tutto lo slot
                 const peopleAvailableForEntireSlot = countPeopleAvailableForEntireSlot(slot);
                 
-                slotsHtml += `Slot ${index + 1}: Dal ${firstDay} al ${lastDay}<br>`;
-                slotsHtml += `<span class="availability-count">Persone disponibili per tutti i ${slot.length} giorni: <strong>${peopleAvailableForEntireSlot}</strong></span><br><br>`;
+                slotsHtml += `<div class="slot-item">
+                    <div class="slot-dates">Slot ${index + 1}: Dal ${firstDay} al ${lastDay}</div>
+                    <span class="availability-count">Persone disponibili per tutti i ${slot.length} giorni: <strong>${peopleAvailableForEntireSlot}</strong></span>
+                </div>`;
             });
             
             slotInfo.innerHTML = slotsHtml;

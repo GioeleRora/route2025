@@ -222,17 +222,53 @@ button:hover {
 
 #slot-info {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     margin: auto;
     width: 40%;
-    align-items: center;
-    padding: 10px;
+    padding: 15px;
     border: 2px solid #ccc;
     background-color: green;
     border-radius: 10px;
     font-size: 18px;
     font-weight: bold;
+    text-align: center;
+}
+
+.slot-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.slot-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.slot-dates {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.availability-count {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    font-size: 0.9em;
+    color: white;
+}
+
+.availability-count strong {
+    color: #ffee58;
+    font-size: 1.1em;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 /* New styles for selection mode indicators */
@@ -676,22 +712,13 @@ button:hover {
     /* Results page improvements */
     #slot-info {
         width: 95%;
-        font-size: 14px;
-        padding: 8px;
+        font-size: 16px;
+        padding: 12px;
     }
     
-    #results-title {
-        font-size: 28px;
-    }
-
-    /* Calendar mobile improvements - add consistent sizing rules here */
-    .calendar-day {
-        aspect-ratio: 1/1;
-        box-sizing: border-box;
-    }
-    
-    .calendar-day.placeholder {
-        aspect-ratio: 1/1;
+    .availability-count {
+        padding: 4px 8px;
+        margin-top: 8px;
     }
 }
 
@@ -772,9 +799,9 @@ button:hover {
     #slot-info {
         width: 100%;
         margin: 10px 0;
-        padding: 12px 5px;
-        font-size: 13px;
-        line-height: 1.4;
+        padding: 12px 8px;
+        font-size: 14px;
+        line-height: 1.5;
         border-width: 1px;
     }
     
@@ -784,11 +811,22 @@ button:hover {
         box-sizing: border-box;
     }
 
+    .slot-item {
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+    }
+
+    .slot-dates {
+        font-size: 1em;
+    }
+
     .availability-count {
         display: block;
-        margin: 5px auto;
-        padding: 2px 5px;
-        font-size: 12px;
+        margin: 8px auto;
+        padding: 5px 10px;
+        font-size: 13px;
+        width: 90%;
+        box-sizing: border-box;
     }
 }
 
