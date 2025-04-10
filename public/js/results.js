@@ -86,10 +86,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateRange.push(dateString); // Add the date to the range
         }
 
-        // Calculate the best N-day slot (e.g., 7 days) excluding disabled days
-        const N = 7;
+        // Calculate the best N-day slot based on people available for the entire slot
+        const N = 6;
         let bestSlots = [];
-        let maxMean = 0;
+        let maxFullyAvailablePeople = 0;
 
         // Funzione per calcolare quante persone sono disponibili per tutti i giorni in uno slot
         function countPeopleAvailableForEntireSlot(slot) {
@@ -113,30 +113,54 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (containsDisabledDay) continue;
             
             let slot = dateRange.slice(i, i + N);
-            let mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
-
-            // Expand the slot if adjacent days have the same mean
+            
+            // Calcola quante persone sono disponibili per tutto lo slot
+            const fullyAvailablePeople = countPeopleAvailableForEntireSlot(slot);
+            
+            // Calcola anche la media giornaliera per informazioni aggiuntive
+            const mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
+            
+            // Cerca di espandere lo slot se anche i giorni adiacenti hanno lo stesso numero di persone completamente disponibili
             let start = i;
             let end = i + N - 1;
-
-            while (start > 0 && (daysCount[dateRange[start - 1]] || 0) === mean) {
-                start--;
-                slot = dateRange.slice(start, end + 1);
+            
+            // Per l'espansione, controlliamo il numero di persone completamente disponibili
+            while (start > 0) {
+                const expandedSlot = [dateRange[start-1], ...slot];
+                // Verifica che il giorno precedente non sia disabilitato
+                if (isDateDisabled(dateRange[start-1])) break;
+                
+                const expandedAvailability = countPeopleAvailableForEntireSlot(expandedSlot);
+                if (expandedAvailability >= fullyAvailablePeople) {
+                    start--;
+                    slot = expandedSlot;
+                } else {
+                    break;
+                }
+            }
+            
+            while (end < dateRange.length - 1) {
+                const expandedSlot = [...slot, dateRange[end+1]];
+                // Verifica che il giorno successivo non sia disabilitato
+                if (isDateDisabled(dateRange[end+1])) break;
+                
+                const expandedAvailability = countPeopleAvailableForEntireSlot(expandedSlot);
+                if (expandedAvailability >= fullyAvailablePeople) {
+                    end++;
+                    slot = expandedSlot;
+                } else {
+                    break;
+                }
             }
 
-            while (end < dateRange.length - 1 && (daysCount[dateRange[end + 1]] || 0) === mean) {
-                end++;
-                slot = dateRange.slice(start, end + 1);
-            }
-
-            // Check if this slot has the maximum mean
-            if (mean > maxMean) {
-                maxMean = mean;
-                bestSlots = [slot]; // Reset to only this slot
-            } else if (mean === maxMean) {
+            // Check if this slot has more fully available people
+            if (fullyAvailablePeople > maxFullyAvailablePeople) {
+                maxFullyAvailablePeople = fullyAvailablePeople;
+                bestSlots = [{ slot, mean }]; // Reset to only this slot
+            } else if (fullyAvailablePeople === maxFullyAvailablePeople && fullyAvailablePeople > 0) {
                 const slotString = JSON.stringify(slot);
-                if (!bestSlots.some(existingSlot => JSON.stringify(existingSlot) === slotString)) {
-                    bestSlots.push(slot);
+                if (!bestSlots.some(item => JSON.stringify(item.slot) === slotString)) {
+                    bestSlots.push({ slot, mean });
                 }
             }
         }
@@ -144,18 +168,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Display the best slots
         if (bestSlots.length > 0) {
             // Use innerHTML instead of textContent to properly handle line breaks
-            let slotsHtml = `Migliori slot con media di ${maxMean.toFixed(2)} persone/giorno:`;
+            let slotsHtml = `Migliori slot con <strong>${maxFullyAvailablePeople}</strong> persone disponibili per l'intero periodo:`;
 
-            bestSlots.forEach((slot, index) => {
+            bestSlots.forEach((item, index) => {
+                const { slot, mean } = item;
                 const firstDay = slot[0].split('-').slice(1).reverse().join('/');
                 const lastDay = slot[slot.length - 1].split('-').slice(1).reverse().join('/');
                 
-                // Calcola quante persone sono disponibili per tutto lo slot
-                const peopleAvailableForEntireSlot = countPeopleAvailableForEntireSlot(slot);
-                
                 slotsHtml += `<div class="slot-item">
                     <div class="slot-dates">Slot ${index + 1}: Dal ${firstDay} al ${lastDay}</div>
-                    <span class="availability-count">Persone disponibili per tutti i ${slot.length} giorni: <strong>${peopleAvailableForEntireSlot}</strong></span>
+                    <span class="availability-count">
+                        <div>Persone disponibili per tutti i ${slot.length} giorni: <strong>${maxFullyAvailablePeople}</strong></div>
+                        <div>Media giornaliera: <strong>${mean.toFixed(2)}</strong> persone/giorno</div>
+                    </span>
                 </div>`;
             });
             
