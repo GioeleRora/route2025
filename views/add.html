@@ -26,8 +26,16 @@
         <button type="submit">Invia</button>
     </form>
     <div id="result"></div>
-    <button onclick="window.location.href='/'" class="back-button">Torna alla Home</button>
-    <div id="end">Made by Gioele Rora</div>
+    
+    <!-- Aggiungi un div per spaziare dal footer fisso -->
+    <div style="height: 100px;"></div>
+    
+    <!-- Contenitore fisso per il pulsante in fondo alla pagina -->
+    <div class="bottom-fixed-container">
+        <button onclick="window.location.href='/'" class="back-button">Torna alla Home</button>
+        <div id="end">Made by Gioele Rora</div>
+    </div>
+    
     <script src="/js/add.js"></script> <!-- Updated script reference -->
 </body>
 </html>

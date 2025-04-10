@@ -328,9 +328,25 @@ button:hover {
     text-align: center;
 }
 
-/* Adattare il pulsante all'interno del contenitore fisso */
-.bottom-fixed-container .back-button {
+/* Adattamenti specifici per la pagina dei risultati */
+#results .bottom-fixed-container {
+    background-color: rgba(223, 161, 5, 0.95); /* Colore di sfondo che si abbina alla pagina results */
+}
+
+#results-button {
+    background-color: #6c87a4;
     margin: 0 auto 10px;
+}
+
+/* Rimuovi stili duplicati che potrebbero interferire */
+#results #results-button {
+    margin: 0 auto 10px;
+}
+
+/* Assicura che i footer abbiano stile coerente */
+#end, #end-results {
+    margin-top: 5px;
+    margin-bottom: 0;
 }
 
 /* Spaziatore per mantenere lo spazio anche quando il calendario non è visibile */

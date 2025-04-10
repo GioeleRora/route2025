@@ -20,8 +20,16 @@
         <div class="calendar-header-result">Sabato</div>
         <div class="calendar-header-result">Domenica</div>
     </div>
-    <button id="results-button" onclick="window.location.href='/'">Torna alla Home</button>
+    
+    <!-- Aggiungi un div per spaziare dal footer fisso -->
+    <div style="height: 100px;"></div>
+    
+    <!-- Contenitore fisso per il pulsante in fondo alla pagina -->
+    <div class="bottom-fixed-container">
+        <button onclick="window.location.href='/'" class="back-button" id="results-button">Torna alla Home</button>
+        <div id="end-results">Made by Gioele Rora</div>
+    </div>
+    
     <script src="/js/results.js"></script>
-    <div id="end-results">Made by Gioele Rora</div>
 </body>
 </html>
