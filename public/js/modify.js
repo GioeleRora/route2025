@@ -67,28 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show the user data section
             userDataDiv.style.display = 'block';
             
-            // Per il debug su mobile
-            console.log("User data trovati, visualizzazione calendario...");
-            
-            // Forza la visualizzazione sul dispositivo mobile
-            userDataDiv.style.opacity = '1';
-            userDataDiv.style.visibility = 'visible';
-            
-            // Assicura che il calendario sia visibile
-            calendarContainer.style.display = 'grid';
+            updatePlaceholderVisibility();
             
             // Initialize calendar
             initializeCalendar(userData.days);
-            
-            // Scroll down to the calendar for better visibility
-            setTimeout(() => {
-                calendarContainer.scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-            
             showMessage(`Dati trovati per "${userData.name}". Puoi modificare la tua disponibilità.`, 'success');
-            
-            // Disattiva il placeholder dato che il calendario è visibile
-            updatePlaceholderVisibility();
             
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -98,25 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Define calendar headers to be added after successful search
-    const calendarHeaders = [
-        "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
-    ];
-
     // Function to initialize the calendar with user data
     function initializeCalendar(selectedDays) {
-        console.log("Inizializzando calendario con", selectedDays.length, "giorni selezionati");
-        
-        // Clear the calendar completely
-        calendarContainer.innerHTML = '';
-        
-        // Add the headers first
-        calendarHeaders.forEach(day => {
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'calendar-header';
-            headerDiv.textContent = day;
-            calendarContainer.appendChild(headerDiv);
-        });
+
+            // Clear existing calendar days (except headers)
+            const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header'));
+            calendarContainer.innerHTML = '';
+            
+            // Re-add headers
+            headers.forEach(header => calendarContainer.appendChild(header));
+    
         
         const startDate = new Date('2025-07-01');
         const endDate = new Date('2025-08-31');
