@@ -66,11 +66,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Show the user data section
             userDataDiv.style.display = 'block';
-            updatePlaceholderVisibility();
+            
+            // Per il debug su mobile
+            console.log("User data trovati, visualizzazione calendario...");
+            
+            // Forza la visualizzazione sul dispositivo mobile
+            userDataDiv.style.opacity = '1';
+            userDataDiv.style.visibility = 'visible';
+            
+            // Assicura che il calendario sia visibile
+            calendarContainer.style.display = 'grid';
             
             // Initialize calendar
             initializeCalendar(userData.days);
+            
+            // Scroll down to the calendar for better visibility
+            setTimeout(() => {
+                calendarContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+            
             showMessage(`Dati trovati per "${userData.name}". Puoi modificare la tua disponibilità.`, 'success');
+            
+            // Disattiva il placeholder dato che il calendario è visibile
+            updatePlaceholderVisibility();
             
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -82,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Function to initialize the calendar with user data
     function initializeCalendar(selectedDays) {
+        console.log("Inizializzando calendario con", selectedDays.length, "giorni selezionati");
+        
         // Clear existing calendar days (except headers)
         const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header'));
         calendarContainer.innerHTML = '';
