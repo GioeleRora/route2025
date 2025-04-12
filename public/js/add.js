@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script is connected and running!');
 
-    // Costante per controllare il blocco dei giorni specifici (26 luglio - 5 agosto)
+    // Costante per controllare il blocco  dei giorni specifici (26 luglio - 5 agosto)
     const DISABLE_SPECIFIC_DAYS = false;
 
     // Funzione per verificare se una data è nell'intervallo bloccato
