@@ -60,28 +60,6 @@ async function initializeDbConnection(retries = 5) {
                 console.log('✓ Availability table already exists');
             }
             
-            // Check if clans table exists, create if not
-            const clansTableCheck = await sql`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public'
-                    AND table_name = 'clans'
-                );
-            `;
-            
-            if (!clansTableCheck[0].exists) {
-                console.log('Creating clans table...');
-                await sql`
-                    CREATE TABLE clans (
-                        name TEXT PRIMARY KEY,
-                        created_at TIMESTAMP DEFAULT NOW()
-                    );
-                `;
-                console.log('✓ Clans table created successfully');
-            } else {
-                console.log('✓ Clans table already exists');
-            }
-            
             return true;
         } catch (err) {
             console.error(`Database connection attempt ${attempt} failed:`, err.message);
@@ -291,18 +269,18 @@ app.post('/api/clan', async (req, res) => {
         const safeClanName = clanName.replace(/\s+/g, '_').toLowerCase();
         const tableName = `clan_${safeClanName}`;
         
-        // Check if the clan exists in the clans table
-        const clanExists = await sql`
+        // Check if table for this clan exists
+        const tableExists = await sql`
             SELECT EXISTS (
-                SELECT FROM clans
-                WHERE name = ${safeClanName}
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public'
+                AND table_name = ${tableName}
             );
         `;
         
-        if (!clanExists[0].exists) {
-            // Add clan to clans table
-            await sql`INSERT INTO clans (name) VALUES (${safeClanName})`;
-            
+        let isNew = !tableExists[0].exists;
+        
+        if (isNew) {
             // Create a new table for this clan
             await sql`
                 CREATE TABLE ${sql(tableName)} (
@@ -312,18 +290,15 @@ app.post('/api/clan', async (req, res) => {
                     created_at TIMESTAMP DEFAULT NOW()
                 );
             `;
-            console.log(`Created new clan: ${clanName} with table: ${tableName}`);
+            console.log(`Created new clan table: ${tableName}`);
         } else {
-            console.log(`Clan ${clanName} already exists`);
+            console.log(`Clan table ${tableName} already exists`);
         }
-        
-        // Store clan name in session cookie (requires express-session middleware)
-        // req.session.clanName = clanName;
         
         res.status(200).json({ 
             success: true, 
             message: 'Clan processed successfully',
-            isNew: !clanExists[0].exists,
+            isNew: isNew,
             clanName: clanName,
             tableName: tableName
         });
