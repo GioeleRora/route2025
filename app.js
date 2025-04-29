@@ -239,26 +239,37 @@ app.get('/js/add.js', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public/js', 'add.js'));
 });
 
-// Add a database connection test endpoint 
-app.get('/api/dbtest', async (req, res) => {
+// Add a diagnostic endpoint to list all tables in the database
+app.get('/api/tables', async (req, res) => {
     try {
-        const result = await sql`SELECT NOW() as server_time`;
+        const tables = await sql`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            ORDER BY table_name;
+        `;
+        
+        console.log('Database tables:', tables);
+        
         res.status(200).json({
             status: 'success',
-            message: 'Database connection is working',
-            serverTime: result[0].server_time
+            count: tables.length,
+            tables: tables.map(t => t.table_name)
         });
     } catch (err) {
+        console.error('Error fetching database tables:', err);
         res.status(500).json({
             status: 'error',
-            message: 'Database connection failed',
+            message: 'Failed to fetch database tables',
             error: err.message
         });
     }
 });
 
-// API endpoint to check if clan exists and create if needed
+// Enhanced API endpoint to check if clan exists and create if needed
 app.post('/api/clan', async (req, res) => {
+    console.log('Received clan creation request:', req.body);
+    
     try {
         const { clanName } = req.body;
         
@@ -269,8 +280,10 @@ app.post('/api/clan', async (req, res) => {
         const safeClanName = clanName.replace(/\s+/g, '_').toLowerCase();
         const tableName = `clan_${safeClanName}`;
         
-        // Check if table for this clan exists - fixed to use proper parameter
-        const tableExists = await sql`
+        console.log(`Processing clan "${clanName}" with table name "${tableName}"`);
+        
+        // Check if table for this clan exists
+        const tableCheck = await sql`
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_schema = 'public'
@@ -278,21 +291,53 @@ app.post('/api/clan', async (req, res) => {
             );
         `;
         
-        let isNew = !tableExists[0].exists;
+        console.log('Table exists check result:', tableCheck[0]);
+        
+        let isNew = !tableCheck[0].exists;
         
         if (isNew) {
-            // Create a new table for this clan - fixed to use sql.unsafe for dynamic table names
-            await sql.unsafe(`
-                CREATE TABLE "${tableName}" (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    days JSONB NOT NULL,
-                    created_at TIMESTAMP DEFAULT NOW()
-                );
-            `);
-            console.log(`Created new clan table: ${tableName}`);
+            console.log(`Creating new table "${tableName}"...`);
+            
+            try {
+                // Use safer technique for dynamic table creation
+                const createTableQuery = `
+                    CREATE TABLE "${tableName}" (
+                        id SERIAL PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        days JSONB NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                `;
+                
+                console.log('Executing SQL:', createTableQuery);
+                
+                await sql.unsafe(createTableQuery);
+                console.log(`✓ Successfully created table: ${tableName}`);
+                
+                // Verify table was created
+                const verifyTable = await sql`
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public'
+                        AND table_name = ${tableName}
+                    );
+                `;
+                
+                console.log('Table creation verification:', verifyTable[0]);
+                
+                if (!verifyTable[0].exists) {
+                    throw new Error(`Table verification failed after creation`);
+                }
+            } catch (tableError) {
+                console.error(`Failed to create table "${tableName}":`, tableError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Failed to create clan table',
+                    details: tableError.message
+                });
+            }
         } else {
-            console.log(`Clan table ${tableName} already exists`);
+            console.log(`Clan table "${tableName}" already exists`);
         }
         
         res.status(200).json({ 
@@ -304,7 +349,11 @@ app.post('/api/clan', async (req, res) => {
         });
     } catch (err) {
         console.error('Error processing clan:', err);
-        res.status(500).json({ success: false, message: 'Server error', details: err.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error', 
+            details: err.message 
+        });
     }
 });
 
