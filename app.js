@@ -282,51 +282,46 @@ app.post('/api/clan', async (req, res) => {
         
         console.log(`Processing clan "${clanName}" with table name "${tableName}"`);
         
-        // Check if table for this clan exists
-        const tableCheck = await sql`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                AND table_name = ${tableName}
-            );
-        `;
+        // Check if table for this clan exists using query parameters
+        const tableCheckResult = await sql.query(
+            'SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)',
+            ['public', tableName]
+        );
         
-        console.log('Table exists check result:', tableCheck[0]);
+        console.log('Table exists check result:', tableCheckResult.rows[0]);
         
-        let isNew = !tableCheck[0].exists;
+        let isNew = !tableCheckResult.rows[0].exists;
         
         if (isNew) {
             console.log(`Creating new table "${tableName}"...`);
             
             try {
-                // Use safer technique for dynamic table creation
-                const createTableQuery = `
-                    CREATE TABLE "${tableName}" (
+                // Execute the table creation using a raw query
+                // This avoids issues with string interpolation and quoting
+                await sql.query(`
+                    CREATE TABLE IF NOT EXISTS "${tableName}" (
                         id SERIAL PRIMARY KEY,
                         name TEXT NOT NULL,
                         days JSONB NOT NULL,
                         created_at TIMESTAMP DEFAULT NOW()
                     )
-                `;
+                `);
                 
-                console.log('Executing SQL:', createTableQuery);
+                console.log(`✓ Table creation query executed for: ${tableName}`);
                 
-                await sql.unsafe(createTableQuery);
-                console.log(`✓ Successfully created table: ${tableName}`);
+                // Wait a moment for the table to be fully created in the database
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Verify table was created
-                const verifyTable = await sql`
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = ${tableName}
-                    );
-                `;
+                // Verify table was created using a different query approach
+                const verifyResult = await sql.query(
+                    'SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)',
+                    ['public', tableName]
+                );
                 
-                console.log('Table creation verification:', verifyTable[0]);
+                console.log('Table creation verification:', verifyResult.rows[0]);
                 
-                if (!verifyTable[0].exists) {
-                    throw new Error(`Table verification failed after creation`);
+                if (!verifyResult.rows[0].exists) {
+                    throw new Error(`Table verification failed after creation. This may be a timing or permissions issue.`);
                 }
             } catch (tableError) {
                 console.error(`Failed to create table "${tableName}":`, tableError);
