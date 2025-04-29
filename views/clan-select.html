@@ -9,14 +9,23 @@
 <body id="clan-select">
     <div class="container">
         <h1>Route 2025</h1>
+        <div class="select-container">
+            <h2>Seleziona un Clan esistente</h2>
+            <select id="existing-clans">
+                <option value="">-- Seleziona un clan --</option>
+                <!-- Options will be populated by JavaScript -->
+            </select>
+            <p>oppure</p>
+        </div>
         <form id="clan-form">
             <div class="form-group">
-                <label for="clan-name">Nome del Clan:</label>
-                <input type="text" id="clan-name" name="clan-name" required>
+                <label for="clan-name">Crea un nuovo Clan:</label>
+                <input type="text" id="clan-name" name="clan-name" placeholder="Inserisci il nome del nuovo clan">
             </div>
             <button type="submit" class="submit-button">Accedi</button>
         </form>
         <div id="error-message" class="hidden error"></div>
+        <div id="loading" class="hidden">Caricamento...</div>
     </div>
 
     <div class="bottom-fixed-container">

@@ -91,7 +91,6 @@ const fetchAvailabilityData = async () => {
 // Helper function to save data to Neon
 const saveAvailabilityData = async (dataArray) => {
     try {
-        // Assume "availability" table exists with columns "name" and "days"
         for (const entry of dataArray) {
             const { name, days } = entry;
             // Insert or update data in Neon
@@ -196,6 +195,31 @@ app.put('/api/availability', async (req, res) => {
     }
 });
 
+
+// Add API endpoint to get all clan tables
+app.get('/api/clans', async (req, res) => {
+    try {
+        const clans = await sql`
+            SELECT name FROM clans;
+        `;
+        
+        console.log('Clans found:', clans);
+        
+        res.status(200).json({
+            status: 'success',
+            count: clans.length,
+            clans
+        });
+    } catch (err) {
+        console.error('Error fetching clan tables:', err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to fetch clan tables',
+            error: err.message
+        });
+    }
+});
+
 // Serve results.html for the /results route
 app.get('/results', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
@@ -237,136 +261,6 @@ app.get('/js/modify.js', (req, res) => {
 
 app.get('/js/add.js', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public/js', 'add.js'));
-});
-
-// Add a diagnostic endpoint to list all tables in the database
-app.get('/api/tables', async (req, res) => {
-    try {
-        const tables = await sql`
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public'
-            ORDER BY table_name;
-        `;
-        
-        console.log('Database tables:', tables);
-        
-        res.status(200).json({
-            status: 'success',
-            count: tables.length,
-            tables: tables.map(t => t.table_name)
-        });
-    } catch (err) {
-        console.error('Error fetching database tables:', err);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to fetch database tables',
-            error: err.message
-        });
-    }
-});
-
-// Enhanced API endpoint to check if clan exists and create if needed
-app.post('/api/clan', async (req, res) => {
-    console.log('Received clan creation request:', req.body);
-    
-    try {
-        const { clanName } = req.body;
-        
-        if (!clanName) {
-            return res.status(400).json({ success: false, message: 'Nome clan mancante' });
-        }
-
-        const safeClanName = clanName.replace(/\s+/g, '_').toLowerCase();
-        const tableName = `clan_${safeClanName}`;
-        
-        console.log(`Processing clan "${clanName}" with table name "${tableName}"`);
-        
-        // Check if table exists using regular template literal
-        const tableCheck = await sql`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_schema = 'public'
-                AND table_name = ${tableName}
-            ) AS exists
-        `;
-        
-        console.log('Table exists check result:', tableCheck);
-        
-        // Make sure we have results before accessing them
-        let exists = false;
-        if (tableCheck && tableCheck[0] && tableCheck[0].exists !== undefined) {
-            exists = tableCheck[0].exists;
-        }
-        let isNew = !exists;
-        
-        console.log(`Table exists: ${exists}, isNew: ${isNew}`);
-        
-        if (isNew) {
-            console.log(`Creating new table "${tableName}"...`);
-            
-            try {
-                // Fix: Use sql.unsafe for dynamic table name
-                const createTableQuery = `
-                    CREATE TABLE IF NOT EXISTS "${tableName}" (
-                        id SERIAL PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        days JSONB NOT NULL,
-                        created_at TIMESTAMP DEFAULT NOW()
-                    )
-                `;
-                
-                console.log('Executing SQL:', createTableQuery);
-                
-                // Use sql.unsafe for dynamic table names
-                await sql.unsafe(createTableQuery);
-                
-                console.log(`✓ Table creation query executed for: ${tableName}`);
-                
-                // Wait a moment for the table to be fully created in the database
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Verify table was created using regular template literal
-                const verifyTable = await sql`
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = ${tableName}
-                    ) AS exists
-                `;
-                
-                console.log('Table creation verification:', verifyTable);
-                
-                if (!verifyTable[0]?.exists) {
-                    throw new Error(`Table verification failed after creation.`);
-                }
-            } catch (tableError) {
-                console.error(`Failed to create table "${tableName}":`, tableError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Failed to create clan table',
-                    details: tableError.message
-                });
-            }
-        } else {
-            console.log(`Clan table "${tableName}" already exists`);
-        }
-        
-        res.status(200).json({ 
-            success: true, 
-            message: 'Clan processed successfully',
-            isNew: isNew,
-            clanName: clanName,
-            tableName: tableName
-        });
-    } catch (err) {
-        console.error('Error processing clan:', err);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error', 
-            details: err.message 
-        });
-    }
 });
 
 // Start the server only after trying to establish DB connection
