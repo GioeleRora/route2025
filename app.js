@@ -60,6 +60,28 @@ async function initializeDbConnection(retries = 5) {
                 console.log('✓ Availability table already exists');
             }
             
+            // Check if clans table exists, create if not
+            const clansTableCheck = await sql`
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = 'public'
+                    AND table_name = 'clans'
+                );
+            `;
+            
+            if (!clansTableCheck[0].exists) {
+                console.log('Creating clans table...');
+                await sql`
+                    CREATE TABLE clans (
+                        name TEXT PRIMARY KEY,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    );
+                `;
+                console.log('✓ Clans table created successfully');
+            } else {
+                console.log('✓ Clans table already exists');
+            }
+            
             return true;
         } catch (err) {
             console.error(`Database connection attempt ${attempt} failed:`, err.message);
@@ -202,23 +224,21 @@ app.get('/results', (req, res) => {
 });
 
 // Serve index.html for the / route
+app.get('/clan-select', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'views', 'clan-select.html'));
+});
+
 app.get('/', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'views', 'clan-select.html'));
+});
+
+app.get('/home', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'home.html'));
 });
 
-// Add route for the form to add new availability
-app.get('/add', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'add.html'));
-});
-
-// Keep compatibility with old routes
-app.get('/index.html', (req, res) => {
-    res.redirect('/add');
-});
-
-// Add route for the modify page
-app.get('/modify', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'modify.html'));
+// Add route for the clan selection page JavaScript
+app.get('/js/clan-select.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/js', 'clan-select.js'));
 });
 
 app.get('/css/styles.css', (req, res) => {
@@ -256,6 +276,60 @@ app.get('/api/dbtest', async (req, res) => {
             message: 'Database connection failed',
             error: err.message
         });
+    }
+});
+
+// API endpoint to check if clan exists and create if needed
+app.post('/api/clan', async (req, res) => {
+    try {
+        const { clanName } = req.body;
+        
+        if (!clanName) {
+            return res.status(400).json({ success: false, message: 'Nome clan mancante' });
+        }
+
+        const safeClanName = clanName.replace(/\s+/g, '_').toLowerCase();
+        const tableName = `clan_${safeClanName}`;
+        
+        // Check if the clan exists in the clans table
+        const clanExists = await sql`
+            SELECT EXISTS (
+                SELECT FROM clans
+                WHERE name = ${safeClanName}
+            );
+        `;
+        
+        if (!clanExists[0].exists) {
+            // Add clan to clans table
+            await sql`INSERT INTO clans (name) VALUES (${safeClanName})`;
+            
+            // Create a new table for this clan
+            await sql`
+                CREATE TABLE ${sql(tableName)} (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    days JSONB NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            `;
+            console.log(`Created new clan: ${clanName} with table: ${tableName}`);
+        } else {
+            console.log(`Clan ${clanName} already exists`);
+        }
+        
+        // Store clan name in session cookie (requires express-session middleware)
+        // req.session.clanName = clanName;
+        
+        res.status(200).json({ 
+            success: true, 
+            message: 'Clan processed successfully',
+            isNew: !clanExists[0].exists,
+            clanName: clanName,
+            tableName: tableName
+        });
+    } catch (err) {
+        console.error('Error processing clan:', err);
+        res.status(500).json({ success: false, message: 'Server error', details: err.message });
     }
 });
 
