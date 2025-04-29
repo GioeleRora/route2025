@@ -282,46 +282,58 @@ app.post('/api/clan', async (req, res) => {
         
         console.log(`Processing clan "${clanName}" with table name "${tableName}"`);
         
-        // Check if table for this clan exists using query parameters
-        const tableCheckResult = await sql.query(
-            'SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)',
-            ['public', tableName]
-        );
+        // Fix: Use template literal approach which is known to work
+        const tableCheck = await sql`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public'
+                AND table_name = ${tableName}
+            ) AS exists
+        `;
         
-        console.log('Table exists check result:', tableCheckResult.rows[0]);
+        console.log('Table exists check result:', tableCheck);
         
-        let isNew = !tableCheckResult.rows[0].exists;
+        // Fix: Make sure we have results before accessing them
+        let exists = false;
+        if (tableCheck && tableCheck[0] && tableCheck[0].exists !== undefined) {
+            exists = tableCheck[0].exists;
+        }
+        let isNew = !exists;
+        
+        console.log(`Table exists: ${exists}, isNew: ${isNew}`);
         
         if (isNew) {
             console.log(`Creating new table "${tableName}"...`);
             
             try {
-                // Execute the table creation using a raw query
-                // This avoids issues with string interpolation and quoting
-                await sql.query(`
-                    CREATE TABLE IF NOT EXISTS "${tableName}" (
+                // Use template literals since we know they work
+                await sql`
+                    CREATE TABLE IF NOT EXISTS ${sql(tableName)} (
                         id SERIAL PRIMARY KEY,
                         name TEXT NOT NULL,
                         days JSONB NOT NULL,
                         created_at TIMESTAMP DEFAULT NOW()
                     )
-                `);
+                `;
                 
                 console.log(`✓ Table creation query executed for: ${tableName}`);
                 
                 // Wait a moment for the table to be fully created in the database
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Verify table was created using a different query approach
-                const verifyResult = await sql.query(
-                    'SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2)',
-                    ['public', tableName]
-                );
+                // Verify table was created (using the working approach)
+                const verifyTable = await sql`
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public'
+                        AND table_name = ${tableName}
+                    ) AS exists
+                `;
                 
-                console.log('Table creation verification:', verifyResult.rows[0]);
+                console.log('Table creation verification:', verifyTable);
                 
-                if (!verifyResult.rows[0].exists) {
-                    throw new Error(`Table verification failed after creation. This may be a timing or permissions issue.`);
+                if (!verifyTable[0]?.exists) {
+                    throw new Error(`Table verification failed after creation.`);
                 }
             } catch (tableError) {
                 console.error(`Failed to create table "${tableName}":`, tableError);
