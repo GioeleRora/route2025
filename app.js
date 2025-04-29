@@ -282,7 +282,7 @@ app.post('/api/clan', async (req, res) => {
         
         console.log(`Processing clan "${clanName}" with table name "${tableName}"`);
         
-        // Fix: Use template literal approach which is known to work
+        // Check if table exists using regular template literal
         const tableCheck = await sql`
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -293,7 +293,7 @@ app.post('/api/clan', async (req, res) => {
         
         console.log('Table exists check result:', tableCheck);
         
-        // Fix: Make sure we have results before accessing them
+        // Make sure we have results before accessing them
         let exists = false;
         if (tableCheck && tableCheck[0] && tableCheck[0].exists !== undefined) {
             exists = tableCheck[0].exists;
@@ -306,9 +306,9 @@ app.post('/api/clan', async (req, res) => {
             console.log(`Creating new table "${tableName}"...`);
             
             try {
-                // Use template literals since we know they work
-                await sql`
-                    CREATE TABLE IF NOT EXISTS ${sql(tableName)} (
+                // Fix: Use sql.unsafe for dynamic table name
+                const createTableQuery = `
+                    CREATE TABLE IF NOT EXISTS "${tableName}" (
                         id SERIAL PRIMARY KEY,
                         name TEXT NOT NULL,
                         days JSONB NOT NULL,
@@ -316,12 +316,17 @@ app.post('/api/clan', async (req, res) => {
                     )
                 `;
                 
+                console.log('Executing SQL:', createTableQuery);
+                
+                // Use sql.unsafe for dynamic table names
+                await sql.unsafe(createTableQuery);
+                
                 console.log(`✓ Table creation query executed for: ${tableName}`);
                 
                 // Wait a moment for the table to be fully created in the database
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Verify table was created (using the working approach)
+                // Verify table was created using regular template literal
                 const verifyTable = await sql`
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables 
