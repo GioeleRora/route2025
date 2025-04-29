@@ -6,12 +6,14 @@
     <title>Modifica Dati</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
+<body class="themed-background">
     <h1>Modifica i Tuoi Dati</h1>
     
-    <div class="search-container">
-        <input type="text" id="name-search" placeholder="Inserisci il tuo nome" required>
-        <button id="search-button">Cerca</button>
+    <div class="centered-content">
+        <div class="search-container glass-effect">
+            <input type="text" id="name-search" placeholder="Inserisci il tuo nome" required>
+            <button id="search-button">Cerca</button>
+        </div>
     </div>
     
     <div id="user-data" style="display: none;">
@@ -34,7 +36,7 @@
     <div id="calendar-placeholder"></div>
     
     <div class="bottom-fixed-container">
-        <button onclick="window.location.href='/'" class="back-button">Torna alla Home</button>
+        <button onclick="window.location.href='/home'" class="back-button">Torna alla Home</button>
         <div id="end">Made by Gioele Rora</div>
     </div>
     

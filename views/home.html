@@ -6,8 +6,8 @@
     <title>Route 2025 - Home</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-    <h1>In Route si! Ma quando??</h1>
+<body class="themed-background">
+    <h1>Gruppo <span id="clan-name"></span></h1>
     
     <div class="home-container">
         <h2>Seleziona un'opzione:</h2>
@@ -24,9 +24,15 @@
             <button onclick="window.location.href='/results'" class="home-button view-button">
                 Visualizza Tutti i Dati
             </button>
+            
+            <button onclick="window.location.href='/clan-select'" class="back-button">
+                Cambia Gruppo
+            </button>
         </div>
     </div>
     
     <div id="end">Made by Gioele Rora</div>
+    
+    <script src="/js/home.js"></script>
 </body>
 </html>

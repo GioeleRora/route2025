@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            const response = await fetch(`/api/user/${encodeURIComponent(name)}`);
+            const response = await fetch(`/api/user/${encodeURIComponent(name)}?clan=${localStorage.getItem('currentClan')}`);
             
             if (!response.ok) {
                 if (response.status === 404) {
@@ -292,7 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     name: currentUserData.name, 
-                    days: selectedDays 
+                    days: selectedDays,
+                    clan: localStorage.getItem('currentClan')
                 })
             });
             

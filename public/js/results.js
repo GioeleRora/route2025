@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Fetch availability data
-        const response = await fetch('/api/availability', {
+        const response = await fetch(`/api/availability?clan=${localStorage.getItem('currentClan')}`, {
             method: 'GET',
             headers: {
-                'Cache-Control': 'no-cache', // Forza il browser a non usare la cache
+                'Cache-Control': 'no-cache',
             }
         });
 

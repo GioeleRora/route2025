@@ -6,31 +6,44 @@
     <title>Route 2025 - Selezione Clan</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body id="clan-select">
-    <div class="container">
-        <h1>Route 2025</h1>
-        <div class="select-container">
-            <h2>Seleziona un Clan esistente</h2>
-            <select id="existing-clans">
-                <option value="">-- Seleziona un clan --</option>
-                <!-- Options will be populated by JavaScript -->
-            </select>
-            <p>oppure</p>
+<body id="clan-select" class="themed-background">
+    <header class="app-header">
+        <h1>In Route si! Ma quando??</h1>
+    </header>
+    
+    <main class="container">
+        <div class="card-header accent-bg">
+            <h2>Seleziona il tuo Clan</h2>
         </div>
-        <form id="clan-form">
-            <div class="form-group">
-                <label for="clan-name">Crea un nuovo Clan:</label>
-                <input type="text" id="clan-name" name="clan-name" placeholder="Inserisci il nome del nuovo clan">
+        
+        <div class="card-body">
+            <div class="select-container">
+                <h3 class="section-title">Clan esistenti</h3>
+                <select id="existing-clans" class="form-control styled-select">
+                    <option value="">-- Seleziona un clan --</option>
+                </select>
+                <div class="divider fancy-divider">
+                    <span>oppure</span>
+                </div>
             </div>
-            <button type="submit" class="submit-button">Accedi</button>
-        </form>
-        <div id="error-message" class="hidden error"></div>
-        <div id="loading" class="hidden">Caricamento...</div>
-    </div>
+            
+            <form id="clan-form">
+                <div class="form-group">
+                    <label for="clan-name" class="input-label">Crea un nuovo Clan:</label>
+                    <input type="text" id="clan-name" name="clan-name" class="form-control styled-input" 
+                            placeholder="Inserisci il nome del nuovo clan">
+                    <p class="form-hint text-muted">(crearlo solo una volta, poi selezionarlo dalla lista)</p>
+                </div>
+                <button type="submit" class="btn btn-primary submit-button glow-effect">Accedi</button>
+            </form>
+            <div id="error-message" class="hidden error"></div>
+            <div id="loading" class="hidden loading-indicator">Caricamento...</div>
+        </div>
+    </main>
 
-    <div class="bottom-fixed-container">
+    <footer class="footer themed-footer">
         <div id="end-results">Made by Gioele Rora</div>
-    </div>
+    </footer>
 
     <script src="/js/clan-select.js"></script>
 </body>

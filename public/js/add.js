@@ -179,11 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Add instructions and clear button
-    const form = document.getElementById('availability-form');
-    const resultDiv = document.getElementById('result');
-    
-
     // Add visual cue for selection mode
     calendarContainer.addEventListener('mousedown', (e) => {
         if (e.target.classList.contains('calendar-day')) {
@@ -230,7 +225,7 @@ document.getElementById('availability-form').addEventListener('submit', async (e
         const response = await fetch('/api/availability', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, days: selectedDays })
+            body: JSON.stringify({ name, days: selectedDays, clan: localStorage.getItem('currentClan') })
         });
 
         if (response.ok) {

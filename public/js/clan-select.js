@@ -11,8 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     existingClansSelect.addEventListener('change', function() {
         const selectedValue = this.value;
         if (selectedValue) {
-            const [tableName, clanName] = selectedValue.split('|');
-            useClan(clanName, tableName);
+            useClan(selectedValue);
         }
     });
 
@@ -42,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 // Use the newly created or existing clan
-                useClan(data.clanName, data.tableName);
+                useClan(clanName);
             } else {
                 showError(data.message || 'Si è verificato un errore.');
             }
@@ -78,12 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to use the selected or created clan
-    function useClan(clanName, tableName) {
-        // Store clan info in localStorage for use in other pages
+    function useClan(clanName) {
         localStorage.setItem('currentClan', clanName);
-        localStorage.setItem('clanTableName', tableName);
         
-        // Redirect to home page
         window.location.href = '/home';
     }
 

@@ -78,9 +78,9 @@ async function initializeDbConnection(retries = 5) {
 }
 
 // Helper function to fetch data from Neon
-const fetchAvailabilityData = async () => {
+const fetchAvailabilityData = async (clan) => {
     try {
-        const rows = await sql`SELECT * FROM availability`; // Query for availability data
+        const rows = await sql`SELECT * FROM availability WHERE clan=${clan}`; // Query for availability data
         return rows; // Return rows (data)
     } catch (err) {
         console.error('Error fetching data from database:', err.message);
@@ -110,14 +110,14 @@ const saveAvailabilityData = async (dataArray) => {
 
 // Route to handle POST request to save availability
 app.post('/api/availability', async (req, res) => {
-    const { name, days } = req.body;
+    const { name, days, clan } = req.body;
 
     if (!name || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
     try {
-        let availabilities = await fetchAvailabilityData();
+        let availabilities = await fetchAvailabilityData(clan);
         console.log(availabilities); // Log fetched data for debugging
 
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
@@ -141,7 +141,8 @@ app.post('/api/availability', async (req, res) => {
 // Route to handle GET request for availability
 app.get('/api/availability', async (req, res) => {
     try {
-        const availabilities = await fetchAvailabilityData();
+        const clan = req.query.clan;
+        const availabilities = await fetchAvailabilityData(clan);
         res.status(200).json(availabilities);
     } catch (err) {
         console.error('Error handling GET request:', err.message);
@@ -153,7 +154,8 @@ app.get('/api/availability', async (req, res) => {
 app.get('/api/user/:name', async (req, res) => {
     try {
         const name = req.params.name;
-        const availabilities = await fetchAvailabilityData();
+        const clan = req.query.clan;
+        const availabilities = await fetchAvailabilityData(clan);
         const userAvailability = availabilities.find(entry => entry.name.toLowerCase() === name.toLowerCase());
         
         if (!userAvailability) {
@@ -169,14 +171,14 @@ app.get('/api/user/:name', async (req, res) => {
 
 // Route to handle PUT request to update availability
 app.put('/api/availability', async (req, res) => {
-    const { name, days } = req.body;
+    const { name, days, clan} = req.body;
 
     if (!name || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
     try {
-        let availabilities = await fetchAvailabilityData();
+        let availabilities = await fetchAvailabilityData(clan);
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
         
         if (existingIndex === -1) {
@@ -280,6 +282,14 @@ app.get('/results', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
 });
 
+app.get('/modify', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'views', 'modify.html'));
+});
+
+app.get('/add', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'views', 'add.html'));
+});
+
 // Serve index.html for the / route
 app.get('/clan-select', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'views', 'clan-select.html'));
@@ -304,6 +314,10 @@ app.get('/css/styles.css', (req, res) => {
 
 app.get('/js/script.js', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'public/js', 'script.js'));
+});
+
+app.get('/js/home.js', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public/js', 'home.js'));
 });
 
 app.get('/js/results.js', (req, res) => {

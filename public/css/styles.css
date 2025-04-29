@@ -9,6 +9,8 @@ body {
 h1 {
     color: #c8fcf0;
     text-align: center;
+    font-size: 2.5rem; /* Increased text size */
+    margin-bottom: 20px;
 }
 
 h2 {
@@ -211,7 +213,6 @@ button:hover {
 #results-button {
     padding: 25px 40px;
     font-size: 20px;
-    background-color: #6c87a4;
     color: white;
     border: none;
     cursor: pointer;
@@ -678,6 +679,17 @@ button:hover {
         color: white;
     }
 
+    #home-button-clan {
+        padding: 25px;
+        font-size: 20px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        color: white;
+    }
+
     .add-button {
         background-color: #4CAF50;
     }
@@ -702,36 +714,76 @@ button:hover {
         background-color: #e68a00;
     }
 
-    /* Modify page styles */
+    .switch-button {
+        background-color: #9c27b0;
+        margin-top: 30px; /* Add extra space above this button */
+        position: relative;
+    }
+
+    .switch-button:hover {
+        background-color: #7b1fa2;
+    }
+
+    .switch-button::before {
+        content: "";
+        position: absolute;
+        top: -15px;
+        left: 25%;
+        width: 50%;
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Modify page styles - updated */
     .search-container {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 10px;
-        margin: 30px auto;
-        max-width: 500px;
+        width: 90%;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 30px 20px;
         text-align: center;
+        border-radius: 15px;
     }
 
     #name-search {
-        padding: 10px 15px;
-        font-size: 16px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        width: auto;
-        min-width: 200px;
-        flex-grow: 0;
+        width: 90%;
+        padding: 15px;
+        font-size: 18px;
+        text-align: center;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    #name-search:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    }
+
+    #name-search::placeholder {
+        color: rgba(255, 255, 255, 0.7);
     }
 
     #search-button {
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 5px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
+        min-width: 180px;
         margin: 0;
+        padding: 12px 25px;
+        font-size: 16px;
+        background-color: rgba(76, 175, 80, 0.9);
+        transition: all 0.3s ease;
+    }
+
+    #search-button:hover {
+        background-color: rgba(76, 175, 80, 1);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
     .back-button {
@@ -1007,7 +1059,7 @@ button:active {
     max-width: 500px;
     margin: 100px auto 0;
     padding: 20px;
-    background: white;
+    background: rgba(111, 255, 243, 0.735);
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     text-align: center;
@@ -1059,4 +1111,240 @@ button:active {
 .error {
     color: #ff0000;
     margin-top: 15px;
+}
+
+/* Themed Background */
+.themed-background {
+    background: linear-gradient(135deg, #5723ab, #921fb2, #19b1a2);
+    background-size: 400% 400%;
+    animation: gradient-animation 15s ease infinite;
+    min-height: 100vh;
+    color: #fff;
+}
+
+.themed-background-results {
+    background: linear-gradient(135deg, #c95e1b, yellow, #d4771f);
+    background-size: 400% 400%;
+    animation: gradient-animation 15s ease infinite;
+    min-height: 100vh;
+    color: #fff;
+}
+
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Card Styles */
+.glass-effect {
+    background: rgba(3, 48, 67, 0.765);  /* Light blue background */
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.accent-bg {
+    background: rgba(255, 255, 255, 0);
+    border-radius: 10px 10px 0 0;
+    padding: 15px 20px;
+}
+
+/* Form Elements */
+.section-title {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.styled-select {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.styled-select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.styled-select option {
+    background-color: #2c3e50;
+    color: #fff;
+}
+
+.styled-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.styled-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.styled-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.input-label {
+    color: #fff;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+/* Divider */
+.fancy-divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.fancy-divider::before,
+.fancy-divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.fancy-divider span {
+    margin: 0 15px;
+    font-style: italic;
+}
+
+/* Button */
+.glow-effect {
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+    border: none;
+    color: #333;
+    font-weight: bold;
+    padding: 12px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 154, 158, 0.5);
+}
+
+.glow-effect:hover {
+    background: linear-gradient(45deg, #fad0c4, #ff9a9e);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(255, 154, 158, 0.7);
+}
+
+.glow-effect:active {
+    transform: translateY(-1px);
+}
+
+/* Footer */
+.themed-footer {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    padding: 15px;
+    margin-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Card Body Additional Styling */
+.card-body {
+    padding: 25px;
+}
+
+/* Error and Loading Indicators */
+.error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.loading-indicator {
+    color: #fff;
+    text-align: center;
+    margin: 15px 0;
+    font-style: italic;
+}
+
+/* Center content container */
+.centered-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 40px 0;
+}
+
+/* Modify page styles - updated */
+.search-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    text-align: center;
+    border-radius: 15px;
+}
+
+#name-search {
+    width: 90%;
+    padding: 15px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+#name-search:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+#name-search::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#search-button {
+    min-width: 180px;
+    margin: 0;
+    padding: 12px 25px;
+    font-size: 16px;
+    background-color: rgba(76, 175, 80, 0.9);
+    transition: all 0.3s ease;
+}
+
+#search-button:hover {
+    background-color: rgba(76, 175, 80, 1);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
