@@ -269,7 +269,7 @@ app.post('/api/clan', async (req, res) => {
         const safeClanName = clanName.replace(/\s+/g, '_').toLowerCase();
         const tableName = `clan_${safeClanName}`;
         
-        // Check if table for this clan exists
+        // Check if table for this clan exists - fixed to use proper parameter
         const tableExists = await sql`
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -281,15 +281,15 @@ app.post('/api/clan', async (req, res) => {
         let isNew = !tableExists[0].exists;
         
         if (isNew) {
-            // Create a new table for this clan
-            await sql`
-                CREATE TABLE ${sql(tableName)} (
+            // Create a new table for this clan - fixed to use sql.unsafe for dynamic table names
+            await sql.unsafe(`
+                CREATE TABLE "${tableName}" (
                     id SERIAL PRIMARY KEY,
                     name TEXT NOT NULL,
                     days JSONB NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
                 );
-            `;
+            `);
             console.log(`Created new clan table: ${tableName}`);
         } else {
             console.log(`Clan table ${tableName} already exists`);
