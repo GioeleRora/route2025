@@ -199,9 +199,13 @@ app.put('/api/availability', async (req, res) => {
 // Add API endpoint to get all clan tables
 app.get('/api/clans', async (req, res) => {
     try {
-        const clans = await sql`
+        const names = await sql`
             SELECT name FROM clans;
         `;
+
+        const clans = names.map(row => {
+            return row.name;
+        });
         
         console.log('Clans found:', clans);
         
@@ -216,6 +220,57 @@ app.get('/api/clans', async (req, res) => {
             status: 'error',
             message: 'Failed to fetch clan tables',
             error: err.message
+        });
+    }
+});
+
+// Add API endpoint to create a new clan
+app.post('/api/clan', async (req, res) => {
+    console.log('Received clan creation request:', req.body);
+    
+    try {
+        const { clanName } = req.body;
+        
+        if (!clanName) {
+            return res.status(400).json({ success: false, message: 'Nome clan mancante' });
+        }
+        
+        console.log(`Processing clan "${clanName}"`);
+        
+        const tableCheck = await sql`
+            SELECT EXISTS (
+                SELECT FROM clans 
+                WHERE name = ${clanName}
+            ) AS exists
+        `;
+        
+        let isNew = !tableCheck[0].exists;
+        
+        console.log(`Clan exists: ${!isNew}, isNew: ${isNew}`);
+        
+        if (isNew) {
+            // Insert the new clan
+            await sql`
+                INSERT INTO clans (name)
+                VALUES (${clanName})
+            `;
+            console.log(`✓ Clan "${clanName}" created successfully`);
+        } else {
+            console.log(`Clan "${clanName}" already exists`);
+        }
+        
+        res.status(200).json({ 
+            success: true, 
+            message: isNew ? 'Clan created successfully' : 'Clan already exists',
+            isNew: isNew,
+            clanName: clanName
+        });
+    } catch (err) {
+        console.error('Error processing clan:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error', 
+            details: err.message 
         });
     }
 });

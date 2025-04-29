@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.clans.forEach(clan => {
                     const option = document.createElement('option');
                     // Store both table name and display name in the value, separated by |
-                    option.value = `${clan.tableName}|${clan.clanName}`;
-                    option.textContent = clan.clanName;
+                    option.value = clan;
+                    option.textContent = clan;
                     existingClansSelect.appendChild(option);
                 });
             }
