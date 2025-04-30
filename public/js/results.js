@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const availabilities = await response.json(); // Parse the JSON response
-        console.log('Availabilities:', availabilities);
+        console.log('Availabilities:', availabilities); 
 
         // Calculate the number of people who selected each day
         const daysCount = {};
