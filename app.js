@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const { neon } = require('@neondatabase/serverless');
 const path = require('path');
 require('dotenv').config();
+const { Analytics } = require('@vercel/analytics/node');
 
 const app = express();
 const port = process.env.PORT || 3000;
