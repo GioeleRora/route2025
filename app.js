@@ -80,7 +80,7 @@ async function initializeDbConnection(retries = 5) {
 // Helper function to fetch data from Neon
 const fetchAvailabilityData = async (clan) => {
     try {
-        const rows = await sql`SELECT * FROM availability WHERE clan=${clan}`; // Query for availability data
+        const rows = await sql`SELECT * FROM availability WHERE clan=${clan}`;
         return rows; // Return rows (data)
     } catch (err) {
         console.error('Error fetching data from database:', err.message);
@@ -89,14 +89,14 @@ const fetchAvailabilityData = async (clan) => {
 };
 
 // Helper function to save data to Neon
-const saveAvailabilityData = async (dataArray) => {
+const saveAvailabilityData = async (dataArray, clan) => {
     try {
         for (const entry of dataArray) {
-            const { name, days } = entry;
+            const { name, days} = entry;
             // Insert or update data in Neon
             await sql`
-                INSERT INTO availability (name, days) 
-                VALUES (${name}, ${JSON.stringify(days)}) 
+                INSERT INTO availability (name, days, clan) 
+                VALUES (${name}, ${JSON.stringify(days)}, ${clan}) 
                 ON CONFLICT (name) 
                 DO UPDATE SET days = ${JSON.stringify(days)}
             `;
@@ -119,6 +119,8 @@ app.post('/api/availability', async (req, res) => {
     try {
         let availabilities = await fetchAvailabilityData(clan);
         console.log(availabilities); // Log fetched data for debugging
+        console.log('Updated availability :', availabilities[existingIndex]);
+        console.log('Clan before post:', clan);
 
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
         if (existingIndex !== -1) {
@@ -129,7 +131,7 @@ app.post('/api/availability', async (req, res) => {
             availabilities.push({ name, days });
         }
 
-        await saveAvailabilityData(availabilities);
+        await saveAvailabilityData(availabilities, clan);
 
         res.status(200).json({ message: 'Availability submitted successfully' });
     } catch (err) {
@@ -142,6 +144,7 @@ app.post('/api/availability', async (req, res) => {
 app.get('/api/availability', async (req, res) => {
     try {
         const clan = req.query.clan;
+        console.log('Clan:', clan); // Log the clan for debugging
         const availabilities = await fetchAvailabilityData(clan);
         res.status(200).json(availabilities);
     } catch (err) {
@@ -172,6 +175,7 @@ app.get('/api/user/:name', async (req, res) => {
 // Route to handle PUT request to update availability
 app.put('/api/availability', async (req, res) => {
     const { name, days, clan} = req.body;
+    console.log('Received PUT request:', req.body);
 
     if (!name || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
@@ -188,7 +192,9 @@ app.put('/api/availability', async (req, res) => {
         // Update the user's days
         availabilities[existingIndex].days = days;
         
-        await saveAvailabilityData(availabilities);
+        console.log('Updated availability :', availabilities[existingIndex]);
+        console.log('Clan before put:', clan);
+        await saveAvailabilityData(availabilities, clan);
         
         res.status(200).json({ message: 'Availability updated successfully' });
     } catch (err) {
