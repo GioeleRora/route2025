@@ -201,9 +201,10 @@ button:hover {
     width: 40%;
     margin: 0 auto 20px;
     padding: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 2px solid #3e8e41;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
+    background: #4CAF50;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
     color: #ffffff;
 }
 
@@ -211,7 +212,7 @@ button:hover {
     display: block;
     margin-bottom: 10px;
     font-weight: bold;
-    color: #c8fcf0;
+    color: #ffffff;
 }
 
 .slot-length-row {
@@ -225,23 +226,25 @@ button:hover {
     width: 110px;
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.88);
+    color: #1d103b;
+    font-weight: bold;
+    text-align: center;
     font-size: 16px;
 }
 
 #min-slot-days:focus {
     outline: none;
-    border-color: #87CEEB;
-    box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
+    border-color: #c8fcf0;
+    box-shadow: 0 0 0 3px rgba(200, 252, 240, 0.25);
 }
 
 #apply-slot-days {
     padding: 10px 18px;
     font-size: 16px;
     border-radius: 8px;
-    background-color: #007BFF;
+    background-color: #1d103b;
     color: white;
     border: none;
     cursor: pointer;
@@ -249,13 +252,13 @@ button:hover {
 }
 
 #apply-slot-days:hover {
-    background-color: #0056b3;
+    background-color: #2c1957;
 }
 
 .slot-length-hint {
     margin: 10px 0 0;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.92);
 }
 
 #results-title {
@@ -682,10 +685,6 @@ button:hover {
         font-size: 40px;
         font-weight: bold;
         color: #c8fcf0;
-    }
-
-    .slot-length-control {
-        width: 90%;
     }
 
     .slot-length-control {
