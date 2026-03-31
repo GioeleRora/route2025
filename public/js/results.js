@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const maxCount = Math.max(...Object.values(daysCount), 0);
 
         // Generate the calendar
-        const startDate = new Date('2025-07-01');
-        const endDate = new Date('2025-08-31');
+        const startDate = new Date('2026-07-01');
+        const endDate = new Date('2026-08-31');
         const dateRange = [];
 
         // Add offset for the first day of the month

@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const calendarContainer = document.getElementById('calendar');
-    const startDate = new Date('2025-07-01');
-    const endDate = new Date('2025-08-31');
+    const startDate = new Date('2026-07-01');
+    const endDate = new Date('2026-08-31');
     let isDragging = false;
     let startDayIndex = null;
     let isSelectMode = true; // Track whether we are in select or deselect mode

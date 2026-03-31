@@ -92,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
             headers.forEach(header => calendarContainer.appendChild(header));
     
         
-        const startDate = new Date('2025-07-01');
-        const endDate = new Date('2025-08-31');
+        const startDate = new Date('2026-07-01');
+        const endDate = new Date('2026-08-31');
         
         // Add offset for the first day of the month
         const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
