@@ -995,9 +995,22 @@ button:hover {
         }
         
         /* Results page improvements */
+        .slot-panels {
+            width: 100%;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .slot-panel,
         #slot-info {
-            font-size: 16px;
-            padding: 12px;
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: auto;
+        }
+
+        #slot-info {
+            font-size: 15px;
+            padding: 10px;
         }
         
         .availability-count {
@@ -1056,7 +1069,7 @@ button:hover {
         body {
             margin: 10px;
             padding: 0;
-            padding-bottom: 150px; /* Maggiore spazio per il footer fisso su mobile */
+            padding-bottom: 220px; /* Maggiore spazio per il footer fisso su mobile */
         }
 
         #calendar {
@@ -1081,11 +1094,26 @@ button:hover {
         }
         
         /* Results page improvements for small screens */
+        .slot-panels {
+            width: 100%;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slot-panel,
         #slot-info {
-            margin: 10px 0;
-            padding: 12px 8px;
-            font-size: 14px;
-            line-height: 1.5;
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: auto;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        #slot-info {
+            margin: 8px 0;
+            padding: 10px 8px;
+            font-size: 13px;
+            line-height: 1.35;
             border-width: 1px;
         }
         
@@ -1093,6 +1121,55 @@ button:hover {
             width: 100%;
             padding: 0 5px;
             box-sizing: border-box;
+        }
+
+        #results-title {
+            font-size: 28px;
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .slot-length-control {
+            padding: 10px;
+        }
+
+        .slot-length-control label {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .slot-length-row {
+            gap: 8px;
+        }
+
+        #min-slot-days {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        #apply-slot-days {
+            padding: 9px 14px;
+            font-size: 14px;
+        }
+
+        .slot-length-hint {
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        .slot-item {
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .slot-dates {
+            font-size: 0.95rem;
+        }
+
+        .availability-count {
+            width: 100%;
+            font-size: 12px;
+            padding: 4px 8px;
         }
 
         .slot-panels {
