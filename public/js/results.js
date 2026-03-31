@@ -71,12 +71,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isDisabled) {
                 dayDiv.classList.add('disabled');
                 // Per i giorni disabilitati, mostra un colore speciale o aggiunge un'indicazione visiva
-                dayDiv.style.backgroundColor = '#cccccc';
+                dayDiv.style.backgroundColor = '#999999';
+                dayDiv.style.color = '#ffffff';
             } else {
                 // Set the background color based on the count for non-disabled days
                 if (maxCount > 0) {
                     const opacity = count / maxCount; // Calculate opacity proportional to the count
-                    dayDiv.style.backgroundColor = `rgba(0, 128, 0, ${opacity})`; // Green with varying opacity
+                    dayDiv.style.backgroundColor = `rgba(76, 175, 80, ${opacity})`; // Green with varying opacity
                 } else {
                     dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
                 }

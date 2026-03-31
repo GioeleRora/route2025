@@ -82,9 +82,10 @@ button:hover {
 }
 
 .calendar-day.selected {
-    background-color: green !important;
+    background-color: #4CAF50 !important;
     color: white;
     font-weight: bold;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
 }
 
 .calendar-day input {
@@ -101,8 +102,8 @@ button:hover {
     font-weight: bold;
     text-align: center;
     padding: 10px;
-    background-color: #47f974;
-    color: #1d103b;
+    background-color: #2a5fad;
+    color: #ffffff;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
@@ -111,8 +112,8 @@ button:hover {
     font-weight: bold;
     text-align: center;
     padding: 10px;
-    background-color: #7822b5;
-    color: #1d103b;
+    background-color: #2a5fad;
+    color: #ffffff;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
@@ -135,8 +136,8 @@ button:hover {
     font-weight: bold;
     text-align: center;
     padding: 10px;
-    background-color: lightblue;
-    color: #1d103b;
+    background-color: #87CEEB;
+    color: #ffffff;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
@@ -145,8 +146,8 @@ button:hover {
     font-weight: bold;
     text-align: center;
     padding: 10px;
-    background-color: violet;
-    color: #1d103b;
+    background-color: #9370DB;
+    color: #ffffff;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
@@ -177,7 +178,7 @@ button:hover {
     font-family: Arial, sans-serif;
     margin: 20px;
     padding: 0;
-    background-color: #dfa105;
+    background-color: #2c1957;
 }
 
 #calendar-day-results {
@@ -199,19 +200,20 @@ button:hover {
 #results-title {
     font-size: 40px;
     font-weight: bold;
-    color: black;
+    color: #c8fcf0;
 }
 
 #end-results {
     margin-top: 20px;
     font-weight: bold;
     text-align: center;
-    color: black;
+    color: #c8fcf0;
 }
 
 #results-button {
     padding: 25px 40px;
     font-size: 20px;
+    background-color: #007BFF;
     color: white;
     border: none;
     cursor: pointer;
@@ -221,9 +223,13 @@ button:hover {
     margin: 20px auto;
 }
 
+#results-button:hover {
+    background-color: #0056b3;
+}
+
 /* Adattamenti specifici per la pagina dei risultati */
 #results .bottom-fixed-container {
-    background-color: rgba(223, 161, 5, 0.7);
+    background-color: rgba(44, 25, 87, 0.7);
 }
 
 /* Ridimensiona il pulsante della pagina results per renderlo coerente con gli altri */
@@ -247,11 +253,12 @@ button:hover {
     width: 40%;
     padding: 15px;
     border: 2px solid #ccc;
-    background-color: green;
+    background-color: #4CAF50;
     border-radius: 10px;
     font-size: 18px;
     font-weight: bold;
     text-align: center;
+    color: white;
 }
 
 .slot-item {
@@ -495,9 +502,10 @@ button:hover {
     }
 
     .calendar-day.selected {
-        background-color: green !important;
+        background-color: #4CAF50 !important;
         color: white;
         font-weight: bold;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
     }
 
     .calendar-day input {
@@ -514,8 +522,8 @@ button:hover {
         font-weight: bold;
         text-align: center;
         padding: 10px;
-        background-color: #47f974;
-        color: #1d103b;
+        background-color: #2a5fad;
+        color: #ffffff;
         border: 1px solid #ccc;
         border-radius: 10px;
     }
@@ -524,8 +532,8 @@ button:hover {
         font-weight: bold;
         text-align: center;
         padding: 10px;
-        background-color: #7822b5;
-        color: #1d103b;
+        background-color: #2a5fad;
+        color: #ffffff;
         border: 1px solid #ccc;
         border-radius: 10px;
     }
@@ -548,8 +556,8 @@ button:hover {
         font-weight: bold;
         text-align: center;
         padding: 10px;
-        background-color: lightblue;
-        color: #1d103b;
+        background-color: #87CEEB;
+        color: #ffffff;
         border: 1px solid #ccc;
         border-radius: 10px;
     }
@@ -558,8 +566,8 @@ button:hover {
         font-weight: bold;
         text-align: center;
         padding: 10px;
-        background-color: violet;
-        color: #1d103b;
+        background-color: #9370DB;
+        color: #ffffff;
         border: 1px solid #ccc;
         border-radius: 10px;
     }
@@ -590,7 +598,7 @@ button:hover {
         font-family: Arial, sans-serif;
         margin: 20px;
         padding: 0;
-        background-color: #dfa105;
+        background-color: #2c1957;
     }
 
     #calendar-day-results {
@@ -612,20 +620,20 @@ button:hover {
     #results-title {
         font-size: 40px;
         font-weight: bold;
-        color: black;
+        color: #c8fcf0;
     }
 
     #end-results {
         margin-top: 20px;
         font-weight: bold;
         text-align: center;
-        color: black;
+        color: #c8fcf0;
     }
 
     #results-button {
         padding: 25px 40px;
         font-size: 20px;
-        background-color: #6c87a4;
+        background-color: #007BFF;
         color: white;
         border: none;
         cursor: pointer;
@@ -633,6 +641,10 @@ button:hover {
         border-radius: 10px;
         display: block;
         margin: 20px auto;
+    }
+
+    #results-button:hover {
+        background-color: #0056b3;
     }
 
     #slot-info {
@@ -644,10 +656,11 @@ button:hover {
         align-items: center;
         padding: 10px;
         border: 2px solid #ccc;
-        background-color: green;
+        background-color: #4CAF50;
         border-radius: 10px;
         font-size: 18px;
         font-weight: bold;
+        color: white;
     }
 
     /* Home page styles */

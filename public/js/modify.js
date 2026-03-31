@@ -128,9 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Apply background color based on the month
             const month = date.getMonth() + 1; // Months are 0-indexed
             if (month === 7) {
-                dayDiv.style.backgroundColor = 'lightblue'; // Light blue for July
+                dayDiv.style.backgroundColor = '#87CEEB'; // Sky blue for July
             } else if (month === 8) {
-                dayDiv.style.backgroundColor = 'violet'; // Violet for August
+                dayDiv.style.backgroundColor = '#9370DB'; // Medium purple for August
             }
             
             // Add mouse event listeners
