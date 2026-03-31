@@ -16,6 +16,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const calendarContainer = document.getElementById('calendar');
     const slotInfo = document.getElementById('slot-info');
+    const minSlotDaysInput = document.getElementById('min-slot-days');
+    const applySlotDaysButton = document.getElementById('apply-slot-days');
+
+    let availabilities = [];
+    let dateRange = [];
+    let daysCount = {};
+    let maxCount = 0;
 
     try {
         // Fetch availability data
@@ -30,11 +37,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const availabilities = await response.json(); // Parse the JSON response
+        availabilities = await response.json(); // Parse the JSON response
         console.log('Availabilities:', availabilities); 
 
+        renderResults();
+
+    } catch (error) {
+        console.error('Error generating calendar:', error);
+        slotInfo.textContent = 'Errore nel caricamento dei dati.';
+    }
+
+    function renderResults() {
+        // Reset calendar and slot info before rendering
+        calendarContainer.innerHTML = `
+            <div class="calendar-header-result">Lunedì</div>
+            <div class="calendar-header-result">Martedì</div>
+            <div class="calendar-header-result">Mercoledì</div>
+            <div class="calendar-header-result">Giovedì</div>
+            <div class="calendar-header-result">Venerdì</div>
+            <div class="calendar-header-result">Sabato</div>
+            <div class="calendar-header-result">Domenica</div>
+        `;
+
         // Calculate the number of people who selected each day
-        const daysCount = {};
+        daysCount = {};
         availabilities.forEach(({ days }) => {
             days.forEach(day => {
                 daysCount[day] = (daysCount[day] || 0) + 1;
@@ -42,12 +68,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Determine the maximum number of people who selected a single day
-        const maxCount = Math.max(...Object.values(daysCount), 0);
+        maxCount = Math.max(...Object.values(daysCount), 0);
 
         // Generate the calendar
         const startDate = new Date('2026-07-01');
         const endDate = new Date('2026-08-31');
-        const dateRange = [];
+        dateRange = [];
 
         // Add offset for the first day of the month
         const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -88,7 +114,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Calculate the best N-day slot based on people available for the entire slot
-        const N = 6;
+        const rawMinDays = parseInt(minSlotDaysInput.value, 10);
+        const N = Math.max(1, Math.min(dateRange.length, Number.isNaN(rawMinDays) ? 6 : rawMinDays));
         let bestSlots = [];
         let maxFullyAvailablePeople = 0;
 
@@ -189,8 +216,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             slotInfo.textContent = 'Nessun dato disponibile';
         }
-    } catch (error) {
-        console.error('Error generating calendar:', error);
-        slotInfo.textContent = 'Errore nel caricamento dei dati.';
     }
+
+    function rerenderFromControl() {
+        if (!availabilities.length) return;
+        renderResults();
+    }
+
+    applySlotDaysButton.addEventListener('click', rerenderFromControl);
+    minSlotDaysInput.addEventListener('change', rerenderFromControl);
 });
