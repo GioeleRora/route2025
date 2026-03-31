@@ -51,13 +51,50 @@ async function initializeDbConnection(retries = 5) {
                 console.log('Creating availability table...');
                 await sql`
                     CREATE TABLE availability (
-                        name TEXT PRIMARY KEY,
-                        days JSONB NOT NULL
+                        id SERIAL PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        clan TEXT NOT NULL,
+                        days JSONB NOT NULL,
+                        UNIQUE (name, clan)
                     );
                 `;
                 console.log('✓ Availability table created successfully');
             } else {
                 console.log('✓ Availability table already exists');
+
+                // Ensure legacy schemas are upgraded for clan-scoped data isolation.
+                const columns = await sql`
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                    AND table_name = 'availability';
+                `;
+
+                const columnNames = columns.map(col => col.column_name);
+
+                if (!columnNames.includes('clan')) {
+                    console.log('Adding missing "clan" column to availability table...');
+                    await sql`ALTER TABLE availability ADD COLUMN clan TEXT DEFAULT 'default';`;
+                    await sql`UPDATE availability SET clan = 'default' WHERE clan IS NULL;`;
+                    await sql`ALTER TABLE availability ALTER COLUMN clan SET NOT NULL;`;
+                    console.log('✓ "clan" column added and initialized');
+                }
+
+                if (!columnNames.includes('id')) {
+                    console.log('Adding surrogate "id" primary key to availability table...');
+                    await sql`ALTER TABLE availability ADD COLUMN id SERIAL;`;
+
+                    await sql`ALTER TABLE availability DROP CONSTRAINT IF EXISTS availability_pkey;`;
+
+                    await sql`ALTER TABLE availability ADD PRIMARY KEY (id);`;
+                    console.log('✓ "id" primary key added');
+                }
+
+                await sql`
+                    CREATE UNIQUE INDEX IF NOT EXISTS availability_name_clan_unique
+                    ON availability (name, clan);
+                `;
+                console.log('✓ Unique index on (name, clan) ensured');
             }
             
             return true;
@@ -97,7 +134,7 @@ const saveAvailabilityData = async (dataArray, clan) => {
             await sql`
                 INSERT INTO availability (name, days, clan) 
                 VALUES (${name}, ${JSON.stringify(days)}, ${clan}) 
-                ON CONFLICT (name) 
+                ON CONFLICT (name, clan)
                 DO UPDATE SET days = ${JSON.stringify(days)}
             `;
         }
