@@ -197,14 +197,29 @@ button:hover {
     text-align: center;
 }
 
-.slot-length-control {
-    width: 40%;
+.slot-panels {
+    width: 90%;
     margin: 0 auto 20px;
-    padding: 15px;
-    border: 2px solid #3e8e41;
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.slot-panel {
+    border: 2px solid #c8fcf0;
     border-radius: 12px;
-    background: #4CAF50;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    min-height: 220px;
+    box-sizing: border-box;
+}
+
+.slot-length-control {
+    flex: 1 1 420px;
+    margin: 0;
+    padding: 15px;
+    background: #4CAF50;
     color: #ffffff;
 }
 
@@ -309,20 +324,19 @@ button:hover {
 }
 
 #slot-info {
+    flex: 1 1 420px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: auto;
-    width: 40%;
+    margin: 0;
     padding: 15px;
-    border: 2px solid #ccc;
     background-color: #4CAF50;
-    border-radius: 10px;
     font-size: 18px;
     font-weight: bold;
     text-align: center;
     color: white;
+    min-height: 220px;
 }
 
 .slot-item {
@@ -687,9 +701,14 @@ button:hover {
         color: #c8fcf0;
     }
 
-    .slot-length-control {
+    .slot-panels {
         width: 95%;
-        padding: 12px;
+        flex-direction: column;
+    }
+
+    .slot-panel,
+    #slot-info {
+        min-height: auto;
     }
 
     .slot-length-row {
@@ -700,6 +719,10 @@ button:hover {
     #apply-slot-days {
         width: 100%;
         max-width: 220px;
+    }
+
+    #slot-info {
+        width: auto;
     }
 
     #end-results {
@@ -973,7 +996,6 @@ button:hover {
         
         /* Results page improvements */
         #slot-info {
-            width: 95%;
             font-size: 16px;
             padding: 12px;
         }
@@ -1060,7 +1082,6 @@ button:hover {
         
         /* Results page improvements for small screens */
         #slot-info {
-            width: 100%;
             margin: 10px 0;
             padding: 12px 8px;
             font-size: 14px;
@@ -1072,6 +1093,10 @@ button:hover {
             width: 100%;
             padding: 0 5px;
             box-sizing: border-box;
+        }
+
+        .slot-panels {
+            width: 100%;
         }
 
         .slot-item {

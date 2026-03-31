@@ -9,15 +9,17 @@
 <body id="results" class="themed-background-results">
     <div id="best-slot">
         <h1 id="results-title">Slot migliore</h1>
-        <div id="slot-length-control" class="slot-length-control">
-            <label for="min-slot-days">Numero minimo di giorni dello slot:</label>
-            <div class="slot-length-row">
-                <input id="min-slot-days" type="number" min="1" max="62" value="6" />
-                <button id="apply-slot-days" type="button">Aggiorna</button>
+        <div class="slot-panels">
+            <div id="slot-length-control" class="slot-length-control slot-panel">
+                <label for="min-slot-days">Numero minimo di giorni dello slot:</label>
+                <div class="slot-length-row">
+                    <input id="min-slot-days" type="number" min="1" max="62" value="6" />
+                    <button id="apply-slot-days" type="button">Aggiorna</button>
+                </div>
+                <p class="slot-length-hint">Lo slot viene calcolato con almeno questo numero di giorni e viene esteso se possibile.</p>
             </div>
-            <p class="slot-length-hint">Lo slot viene calcolato con almeno questo numero di giorni e viene esteso se possibile.</p>
+            <p id="slot-info" class="slot-panel">No data available yet.</p>
         </div>
-        <p id="slot-info">No data available yet.</p>
     </div>
     <div id="calendar"> 
         <div class="calendar-header-result">Lunedì</div>
