@@ -81,6 +81,15 @@ button:hover {
     box-shadow: none;
 }
 
+.calendar-day.clickable-day {
+    cursor: pointer;
+}
+
+.calendar-day.clickable-day:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px rgba(200, 252, 240, 0.35);
+}
+
 .calendar-day.selected {
     background-color: #4CAF50 !important;
     color: white;
@@ -356,6 +365,63 @@ button:hover {
     font-size: 1.1em;
     margin-bottom: 5px;
     color: white;
+}
+
+.day-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 10, 35, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+}
+
+.day-popup-overlay.hidden {
+    display: none;
+}
+
+.day-popup {
+    width: min(90vw, 320px);
+    background: #4CAF50;
+    color: white;
+    border: 2px solid #c8fcf0;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    padding: 18px 16px;
+    text-align: center;
+}
+
+.day-popup-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.day-popup-date {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.day-popup-count {
+    font-size: 1rem;
+    margin-bottom: 14px;
+}
+
+.day-popup-close {
+    padding: 10px 16px;
+    font-size: 15px;
+    border: none;
+    border-radius: 10px;
+    background: #1d103b;
+    color: white;
+    cursor: pointer;
+}
+
+.day-popup-close:hover {
+    background: #2c1957;
 }
 
 .availability-count {

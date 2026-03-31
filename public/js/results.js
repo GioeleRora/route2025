@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const slotInfo = document.getElementById('slot-info');
     const minSlotDaysInput = document.getElementById('min-slot-days');
     const applySlotDaysButton = document.getElementById('apply-slot-days');
+    const dayPopupOverlay = document.getElementById('day-popup-overlay');
+    const dayPopupDate = document.getElementById('day-popup-date');
+    const dayPopupCount = document.getElementById('day-popup-count');
+    const dayPopupClose = document.getElementById('day-popup-close');
 
     let availabilities = [];
     let dateRange = [];
@@ -107,6 +111,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
                 }
+            }
+
+            if (!isDisabled) {
+                dayDiv.classList.add('clickable-day');
+                dayDiv.title = 'Click per vedere quante persone sono presenti in questo giorno';
+                dayDiv.addEventListener('click', () => {
+                    openDayPopup(dateString, count, isDisabled);
+                });
             }
 
             calendarContainer.appendChild(dayDiv);
@@ -222,6 +234,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!availabilities.length) return;
         renderResults();
     }
+
+    function openDayPopup(dateString, count, isDisabled) {
+        const [year, month, day] = dateString.split('-');
+        dayPopupDate.textContent = `Data: ${day}/${month}/${year}`;
+        dayPopupCount.textContent = isDisabled
+            ? 'Questo giorno è disabilitato.'
+            : `Persone presenti: ${count}`;
+
+        dayPopupOverlay.classList.remove('hidden');
+        dayPopupOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeDayPopup() {
+        dayPopupOverlay.classList.add('hidden');
+        dayPopupOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    dayPopupClose.addEventListener('click', closeDayPopup);
+    dayPopupOverlay.addEventListener('click', (event) => {
+        if (event.target === dayPopupOverlay) {
+            closeDayPopup();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDayPopup();
+        }
+    });
 
     applySlotDaysButton.addEventListener('click', rerenderFromControl);
     minSlotDaysInput.addEventListener('change', rerenderFromControl);
