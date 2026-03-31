@@ -119,7 +119,6 @@ app.post('/api/availability', async (req, res) => {
     try {
         let availabilities = await fetchAvailabilityData(clan);
         console.log(availabilities); // Log fetched data for debugging
-        console.log('Updated availability :', availabilities[existingIndex]);
         console.log('Clan before post:', clan);
 
         const existingIndex = availabilities.findIndex(entry => entry.name === name);
