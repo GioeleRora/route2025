@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up search functionality
     searchButton.addEventListener('click', async () => {
         const name = nameInput.value.trim();
+        nameInput.value = name;
         if (!name) {
             showMessage('Inserisci un nome per cercare i tuoi dati.', 'error');
             return;

@@ -217,7 +217,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('availability-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('name').value;
+    const nameInput = document.getElementById('name');
+    const name = nameInput.value.trim();
+
+    nameInput.value = name;
+
+    if (!name) {
+        alert('Inserisci un nome valido senza spazi iniziali o finali.');
+        return;
+    }
+
     const selectedDays = Array.from(document.querySelectorAll('#calendar .calendar-day.selected'))
         .map(dayDiv => dayDiv.dataset.date); // Get the selected dates
 

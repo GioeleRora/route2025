@@ -28,6 +28,8 @@ if (!connectionString) {
 // Create SQL executor using neon's serverless driver
 const sql = neon(connectionString);
 
+const normalizeName = (name) => (typeof name === 'string' ? name.trim() : '');
+
 // Initialize database connection with retries
 async function initializeDbConnection(retries = 5) {
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -129,11 +131,17 @@ const fetchAvailabilityData = async (clan) => {
 const saveAvailabilityData = async (dataArray, clan) => {
     try {
         for (const entry of dataArray) {
-            const { name, days} = entry;
+            const { name, days } = entry;
+            const normalizedName = normalizeName(name);
+
+            if (!normalizedName) {
+                throw new Error('Invalid name');
+            }
+
             // Insert or update data in Neon
             await sql`
                 INSERT INTO availability (name, days, clan) 
-                VALUES (${name}, ${JSON.stringify(days)}, ${clan}) 
+                VALUES (${normalizedName}, ${JSON.stringify(days)}, ${clan}) 
                 ON CONFLICT (name, clan)
                 DO UPDATE SET days = ${JSON.stringify(days)}
             `;
@@ -148,8 +156,9 @@ const saveAvailabilityData = async (dataArray, clan) => {
 // Route to handle POST request to save availability
 app.post('/api/availability', async (req, res) => {
     const { name, days, clan } = req.body;
+    const normalizedName = normalizeName(name);
 
-    if (!name || !days || !Array.isArray(days)) {
+    if (!normalizedName || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
@@ -158,13 +167,13 @@ app.post('/api/availability', async (req, res) => {
         console.log(availabilities); // Log fetched data for debugging
         console.log('Clan before post:', clan);
 
-        const existingIndex = availabilities.findIndex(entry => entry.name === name);
+        const existingIndex = availabilities.findIndex(entry => normalizeName(entry.name).toLowerCase() === normalizedName.toLowerCase());
         if (existingIndex !== -1) {
             const existingDays = availabilities[existingIndex].days;
             const updatedDays = [...new Set([...existingDays, ...days])];
             availabilities[existingIndex].days = updatedDays;
         } else {
-            availabilities.push({ name, days });
+            availabilities.push({ name: normalizedName, days });
         }
 
         await saveAvailabilityData(availabilities, clan);
@@ -192,10 +201,10 @@ app.get('/api/availability', async (req, res) => {
 // Route to handle GET request for a specific user's availability
 app.get('/api/user/:name', async (req, res) => {
     try {
-        const name = req.params.name;
+        const name = normalizeName(req.params.name);
         const clan = req.query.clan;
         const availabilities = await fetchAvailabilityData(clan);
-        const userAvailability = availabilities.find(entry => entry.name.toLowerCase() === name.toLowerCase());
+        const userAvailability = availabilities.find(entry => normalizeName(entry.name).toLowerCase() === name.toLowerCase());
         
         if (!userAvailability) {
             return res.status(404).json({ error: 'User not found' });
@@ -211,15 +220,16 @@ app.get('/api/user/:name', async (req, res) => {
 // Route to handle PUT request to update availability
 app.put('/api/availability', async (req, res) => {
     const { name, days, clan} = req.body;
+    const normalizedName = normalizeName(name);
     console.log('Received PUT request:', req.body);
 
-    if (!name || !days || !Array.isArray(days)) {
+    if (!normalizedName || !days || !Array.isArray(days)) {
         return res.status(400).json({ error: 'Invalid data' });
     }
 
     try {
         let availabilities = await fetchAvailabilityData(clan);
-        const existingIndex = availabilities.findIndex(entry => entry.name === name);
+        const existingIndex = availabilities.findIndex(entry => normalizeName(entry.name).toLowerCase() === normalizedName.toLowerCase());
         
         if (existingIndex === -1) {
             return res.status(404).json({ error: 'User not found' });
