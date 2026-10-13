@@ -1,48 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route 2025 - Selezione Clan</title>
+    <title>Route Planner - Selezione Clan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body id="clan-select" class="themed-background">
-    <header class="app-header">
-        <h1>In Route si! Ma quando??</h1>
+<body>
+    <header class="app-navbar">
+        <a href="/" class="brand-link">
+            <span class="brand-icon">🏕️</span>
+            <span class="brand-text">Route Planner</span>
+        </a>
     </header>
-    
-    <main class="container">
-        <div class="card-header accent-bg">
-            <h2>Seleziona il tuo Clan</h2>
+
+    <main class="app-container app-container-narrow">
+        <div class="page-header">
+            <h1 class="page-title">In Route sì! Ma quando?</h1>
+            <p class="page-subtitle">Scegli il tuo gruppo scout o creane uno nuovo per raccogliere le disponibilità estive.</p>
         </div>
-        
-        <div class="card-body">
-            <div class="select-container">
-                <h3 class="section-title">Clan esistenti</h3>
-                <select id="existing-clans" class="form-control styled-select">
-                    <option value="">-- Seleziona un clan --</option>
+
+        <div class="glass-card">
+            <div class="form-group">
+                <label for="existing-clans" class="input-label">Seleziona un Clan esistente</label>
+                <select id="existing-clans" class="form-control">
+                    <option value="">-- Caricamento clan in corso... --</option>
                 </select>
-                <div class="divider fancy-divider">
-                    <span>oppure</span>
-                </div>
             </div>
-            
+
+            <div class="fancy-divider">
+                <span>oppure</span>
+            </div>
+
             <form id="clan-form">
                 <div class="form-group">
-                    <label for="clan-name" class="input-label">Crea un nuovo Clan:</label>
-                    <input type="text" id="clan-name" name="clan-name" class="form-control styled-input" 
-                            placeholder="Inserisci il nome del nuovo clan">
-                    <p class="form-hint text-muted">(crearlo solo una volta, poi selezionarlo dalla lista ricaricando la pagina)</p>
+                    <label for="clan-name" class="input-label">Crea un nuovo Clan</label>
+                    <input type="text" id="clan-name" name="clan-name" class="form-control" 
+                           placeholder="Es. Clan Pegaso, Fuoco La Sorgente..." autocomplete="off">
+                    <p class="form-hint">Inserisci il nome del tuo clan o gruppo per iniziare subito a raccogliere le date.</p>
                 </div>
-                <button type="submit" class="btn btn-primary submit-button glow-effect">Accedi</button>
+                <button type="submit" id="submit-btn" class="btn btn-primary btn-block btn-lg">
+                    <span>Entra nel Gruppo</span>
+                    <span>→</span>
+                </button>
             </form>
-            <div id="error-message" class="hidden error"></div>
-            <div id="loading" class="hidden loading-indicator">Caricamento...</div>
         </div>
     </main>
 
-    <footer class="footer themed-footer">
-        <div id="end-results">Made by Gioele Rora</div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="app-footer">
+        <div>Route Planner &bull; Made with &hearts; for Scouts by Gioele Rora</div>
     </footer>
 
     <script src="/js/clan-select.js"></script>

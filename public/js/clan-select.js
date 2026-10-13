@@ -1,101 +1,110 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     const clanForm = document.getElementById('clan-form');
     const existingClansSelect = document.getElementById('existing-clans');
-    const errorMessage = document.getElementById('error-message');
-    const loading = document.getElementById('loading');
-    
-    // Load existing clans when the page loads
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Load available clans on mount
     loadExistingClans();
-    
-    // Handle clan selection from dropdown
-    existingClansSelect.addEventListener('change', function() {
-        const selectedValue = this.value;
+
+    // Dropdown change handler
+    existingClansSelect.addEventListener('change', () => {
+        const selectedValue = existingClansSelect.value.trim();
         if (selectedValue) {
             useClan(selectedValue);
         }
     });
 
-    // Handle form submission for new clan
-    clanForm.addEventListener('submit', async function(e) {
+    // Form submission for creating / entering a clan
+    clanForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const clanName = document.getElementById('clan-name').value.trim();
+        const clanInput = document.getElementById('clan-name');
+        const clanName = clanInput.value.trim();
+
         if (!clanName) {
-            showError('Per favore, inserisci un nome del clan.');
+            showToast('Per favore, inserisci un nome valido per il clan.', 'error');
+            clanInput.focus();
             return;
         }
 
-        showLoading();
-        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Accesso in corso...</span>';
+
         try {
             const response = await fetch('/api/clan', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clanName })
             });
 
             const data = await response.json();
-            hideLoading();
-            
-            if (data.success) {
-                // Use the newly created or existing clan
-                useClan(clanName);
+
+            if (response.ok && data.success) {
+                showToast(`Benvenuto nel Clan "${data.clanName}"!`, 'success');
+                setTimeout(() => {
+                    useClan(data.clanName);
+                }, 400);
             } else {
-                showError(data.message || 'Si è verificato un errore.');
+                showToast(data.message || 'Si è verificato un errore durante l\'accesso.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Entra nel Gruppo</span> <span>→</span>';
             }
         } catch (error) {
-            hideLoading();
             console.error('Error:', error);
-            showError('Si è verificato un errore di connessione.');
+            showToast('Errore di connessione al server.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Entra nel Gruppo</span> <span>→</span>';
         }
     });
 
-    // Function to load existing clans
+    // Fetch existing clans
     async function loadExistingClans() {
-        showLoading();
         try {
             const response = await fetch('/api/clans');
             const data = await response.json();
-            
-            if (data.status === 'success' && data.clans.length > 0) {
+
+            existingClansSelect.innerHTML = '<option value="">-- Seleziona un clan esistente --</option>';
+
+            if (data.status === 'success' && data.clans && data.clans.length > 0) {
                 data.clans.forEach(clan => {
                     const option = document.createElement('option');
-                    // Store both table name and display name in the value, separated by |
                     option.value = clan;
                     option.textContent = clan;
                     existingClansSelect.appendChild(option);
                 });
+            } else {
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = 'Nessun clan trovato. Creane uno qui sotto!';
+                emptyOption.disabled = true;
+                existingClansSelect.appendChild(emptyOption);
             }
-            hideLoading();
         } catch (error) {
-            hideLoading();
             console.error('Error loading clans:', error);
-            showError('Impossibile caricare i clan esistenti.');
+            existingClansSelect.innerHTML = '<option value="">Errore nel caricamento dei clan</option>';
+            showToast('Impossibile caricare i clan salvati.', 'error');
         }
     }
 
-    // Function to use the selected or created clan
     function useClan(clanName) {
         localStorage.setItem('currentClan', clanName);
-        
         window.location.href = '/home';
     }
 
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.classList.remove('hidden');
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const icon = type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
         setTimeout(() => {
-            errorMessage.classList.add('hidden');
-        }, 5000);
-    }
-    
-    function showLoading() {
-        loading.classList.remove('hidden');
-    }
-    
-    function hideLoading() {
-        loading.classList.add('hidden');
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
 });
