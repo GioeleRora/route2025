@@ -1,54 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Risultati</title>
-    <link rel="stylesheet" href="/css/styles.css"> <!-- Ensure correct path -->
+    <title>Route Planner - Risultati e Heatmap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body id="results" class="themed-background-results">
-    <div id="best-slot">
-        <h1 id="results-title">Slot migliore</h1>
-        <div class="slot-panels">
-            <div id="slot-length-control" class="slot-length-control slot-panel">
-                <label for="min-slot-days">Numero minimo di giorni dello slot:</label>
-                <div class="slot-length-row">
-                    <input id="min-slot-days" type="number" min="1" max="62" value="6" />
-                    <button id="apply-slot-days" type="button">Aggiorna</button>
-                </div>
-                <p class="slot-length-hint">Lo slot viene calcolato con almeno questo numero di giorni e viene esteso se possibile.</p>
-            </div>
-            <p id="slot-info" class="slot-panel">No data available yet.</p>
+<body>
+    <header class="app-navbar">
+        <a href="/home" class="brand-link">
+            <span class="brand-icon">🏕️</span>
+            <span class="brand-text">Route Planner</span>
+        </a>
+        <div class="nav-clan-badge">
+            <span class="clan-indicator"></span>
+            <span>Clan: <span class="clan-name" id="nav-clan-name">...</span></span>
+            <a href="/home">← Dashboard</a>
         </div>
-    </div>
-    <div id="calendar"> 
-        <div class="calendar-header-result">Lunedì</div>
-        <div class="calendar-header-result">Martedì</div>
-        <div class="calendar-header-result">Mercoledì</div>
-        <div class="calendar-header-result">Giovedì</div>
-        <div class="calendar-header-result">Venerdì</div>
-        <div class="calendar-header-result">Sabato</div>
-        <div class="calendar-header-result">Domenica</div>
+    </header>
+
+    <main class="app-container">
+        <div class="page-header">
+            <h1 class="page-title">Risultati & Heatmap Presenze</h1>
+            <p class="page-subtitle">Esplora le date con maggiore affluenza e individua il periodo ideale per la Route del tuo Clan.</p>
+        </div>
+
+        <!-- Hero: Best Slot & Filter Controls -->
+        <div class="results-hero-grid">
+            <!-- Controls card -->
+            <div class="slot-controls-card">
+                <div>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 8px;">Parametri Slot</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+                        Imposta la durata minima in giorni continuativi per la Route:
+                    </p>
+                    <label for="min-slot-days" class="input-label">Durata minima (giorni):</label>
+                    <div class="slot-control-row">
+                        <input id="min-slot-days" type="number" min="2" max="31" value="6" class="form-control" style="width: 100px; text-align: center; font-weight: 700;">
+                        <button id="apply-slot-days" type="button" class="btn btn-secondary" style="flex: 1;">Ricalcola</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; pt-3; border-top: 1px solid var(--border-subtle);">
+                    <button id="copy-whatsapp-btn" type="button" class="btn btn-accent btn-block btn-sm">
+                        <span>Condividi su WhatsApp 📋</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Best Slot Showcase -->
+            <div id="slot-info" class="best-slot-card">
+                <div class="best-slot-tag">🏆 Periodo consigliato</div>
+                <div id="slot-content">
+                    <p style="color: var(--text-muted); font-style: italic;">Caricamento calcolo slot in corso...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heatmap Calendar Card -->
+        <div class="glass-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div class="month-badges-group">
+                    <span class="month-badge july">Luglio 2026</span>
+                    <span class="month-badge august">Agosto 2026</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    💡 Fai click su qualsiasi giorno per vedere <strong>chi c'è</strong> e <strong>chi manca</strong>
+                </div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div id="calendar" class="calendar-grid">
+                <div class="calendar-header-cell">Lun</div>
+                <div class="calendar-header-cell">Mar</div>
+                <div class="calendar-header-cell">Mer</div>
+                <div class="calendar-header-cell">Gio</div>
+                <div class="calendar-header-cell">Ven</div>
+                <div class="calendar-header-cell">Sab</div>
+                <div class="calendar-header-cell">Dom</div>
+            </div>
+
+            <!-- Heatmap Gradient Legend -->
+            <div class="heatmap-legend-bar">
+                <span>0 presenze</span>
+                <div class="heatmap-gradient-preview"></div>
+                <span>100% presenze (tutto il Clan)</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Interactive Day Details Modal -->
+    <div id="day-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em;">Dettaglio Giornata</div>
+                    <h3 id="modal-date-title" class="modal-title">Data</h3>
+                </div>
+                <button type="button" id="modal-close-btn" class="modal-close-btn" aria-label="Chiudi">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="attendance-progress-container">
+                    <div class="attendance-progress-label">
+                        <span>Presenze complessive:</span>
+                        <strong id="modal-ratio-label">0 / 0 (0%)</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div id="modal-progress-bar" class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="presence-section">
+                    <div class="presence-section-title present">
+                        <span>✓ Presenti</span>
+                        <span id="modal-present-count">(0)</span>
+                    </div>
+                    <div id="modal-present-list" class="names-badges-list">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Nessuno</span>
+                    </div>
+                </div>
+
+                <div class="presence-section" style="margin-top: 20px;">
+                    <div class="presence-section-title absent">
+                        <span>✕ Assenti / Non disponibili</span>
+                        <span id="modal-absent-count">(0)</span>
+                    </div>
+                    <div id="modal-absent-list" class="names-badges-list">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Nessuno</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="modal-dismiss-btn" class="btn btn-secondary btn-sm">Chiudi</button>
+            </div>
+        </div>
     </div>
 
-    <div id="day-popup-overlay" class="day-popup-overlay hidden" aria-hidden="true">
-        <div id="day-popup" class="day-popup" role="dialog" aria-modal="true" aria-labelledby="day-popup-title">
-            <div id="day-popup-title" class="day-popup-title">Dettagli giorno</div>
-            <div id="day-popup-date" class="day-popup-date"></div>
-            <div id="day-popup-count" class="day-popup-count"></div>
-            <button id="day-popup-close" type="button" class="day-popup-close">Chiudi</button>
-        </div>
-    </div>
-    
-    <!-- Aggiungi un div per spaziare dal footer fisso -->
-    <div style="height: 100px;"></div>
-    
-    <!-- Contenitore fisso per il pulsante in fondo alla pagina -->
-    <div class="bottom-fixed-container">
-        <button onclick="window.location.href='/home'" class="back-button" id="results-button">Torna alla Home</button>
-        <div id="end-results">Made by Gioele Rora</div>
-    </div>
-    
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="app-footer">
+        <div>Route Planner &bull; Made with &hearts; for Scouts by Gioele Rora</div>
+    </footer>
+
     <script src="/js/results.js"></script>
 </body>
 </html>

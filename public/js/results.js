@@ -1,269 +1,378 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Costante per controllare il blocco dei giorni specifici (26 luglio - 5 agosto)
-    const DISABLE_SPECIFIC_DAYS = false;
-
-    // Funzione per verificare se una data è nell'intervallo bloccato
-    function isDateDisabled(dateString) {
-        if (!DISABLE_SPECIFIC_DAYS) return false;
-        
-        const date = new Date(dateString);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        
-        // Controlla se è tra il 26 luglio e il 5 agosto inclusi
-        return (month === 7 && day >= 26) || (month === 8 && day <= 5);
+    const clanName = localStorage.getItem('currentClan');
+    if (!clanName) {
+        window.location.href = '/clan-select';
+        return;
     }
 
+    const navClanName = document.getElementById('nav-clan-name');
+    if (navClanName) navClanName.textContent = clanName;
+
     const calendarContainer = document.getElementById('calendar');
-    const slotInfo = document.getElementById('slot-info');
+    const slotContent = document.getElementById('slot-content');
     const minSlotDaysInput = document.getElementById('min-slot-days');
     const applySlotDaysButton = document.getElementById('apply-slot-days');
-    const dayPopupOverlay = document.getElementById('day-popup-overlay');
-    const dayPopupDate = document.getElementById('day-popup-date');
-    const dayPopupCount = document.getElementById('day-popup-count');
-    const dayPopupClose = document.getElementById('day-popup-close');
+    const copyWhatsappBtn = document.getElementById('copy-whatsapp-btn');
+
+    // Modal elements
+    const dayModal = document.getElementById('day-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalDismissBtn = document.getElementById('modal-dismiss-btn');
+    const modalDateTitle = document.getElementById('modal-date-title');
+    const modalRatioLabel = document.getElementById('modal-ratio-label');
+    const modalProgressBar = document.getElementById('modal-progress-bar');
+    const modalPresentCount = document.getElementById('modal-present-count');
+    const modalPresentList = document.getElementById('modal-present-list');
+    const modalAbsentCount = document.getElementById('modal-absent-count');
+    const modalAbsentList = document.getElementById('modal-absent-list');
+
+    const YEAR = 2026;
+    const startDate = new Date(`${YEAR}-07-01`);
+    const endDate = new Date(`${YEAR}-08-31`);
 
     let availabilities = [];
     let dateRange = [];
     let daysCount = {};
-    let maxCount = 0;
+    let membersByDay = {};
+    let currentBestSlotSummary = null;
 
     try {
-        // Fetch availability data
-        const response = await fetch(`/api/availability?clan=${localStorage.getItem('currentClan')}`, {
-            method: 'GET',
-            headers: {
-                'Cache-Control': 'no-cache',
-            }
+        const response = await fetch(`/api/availability?clan=${encodeURIComponent(clanName)}`, {
+            cache: 'no-cache'
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-        availabilities = await response.json(); // Parse the JSON response
-        console.log('Availabilities:', availabilities); 
-
-        renderResults();
+        availabilities = await response.json();
+        renderHeatmapAndSlots();
 
     } catch (error) {
-        console.error('Error generating calendar:', error);
-        slotInfo.textContent = 'Errore nel caricamento dei dati.';
+        console.error('Error loading results:', error);
+        slotContent.innerHTML = '<p style="color: var(--danger);">Errore nel caricamento delle disponibilità.</p>';
+        showToast('Errore durante il caricamento dei dati.', 'error');
     }
 
-    function renderResults() {
-        // Reset calendar and slot info before rendering
-        calendarContainer.innerHTML = `
-            <div class="calendar-header-result">Lunedì</div>
-            <div class="calendar-header-result">Martedì</div>
-            <div class="calendar-header-result">Mercoledì</div>
-            <div class="calendar-header-result">Giovedì</div>
-            <div class="calendar-header-result">Venerdì</div>
-            <div class="calendar-header-result">Sabato</div>
-            <div class="calendar-header-result">Domenica</div>
-        `;
+    function renderHeatmapAndSlots() {
+        const totalRespondents = availabilities.length;
 
-        // Calculate the number of people who selected each day
+        // Reset tracking structures
         daysCount = {};
-        availabilities.forEach(({ days }) => {
-            days.forEach(day => {
-                daysCount[day] = (daysCount[day] || 0) + 1;
+        membersByDay = {};
+        dateRange = [];
+
+        // Build list of dates
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            dateRange.push(dateStr);
+            daysCount[dateStr] = 0;
+            membersByDay[dateStr] = { present: [], absent: [] };
+        }
+
+        // Aggregate presence
+        availabilities.forEach(person => {
+            const personDays = Array.isArray(person.days) ? person.days : [];
+            dateRange.forEach(dateStr => {
+                if (personDays.includes(dateStr)) {
+                    daysCount[dateStr] = (daysCount[dateStr] || 0) + 1;
+                    membersByDay[dateStr].present.push(person.name);
+                } else {
+                    membersByDay[dateStr].absent.push(person.name);
+                }
             });
         });
 
-        // Determine the maximum number of people who selected a single day
-        maxCount = Math.max(...Object.values(daysCount), 0);
+        // Compute best slot first so we can mark cells
+        const minDays = Math.max(2, Math.min(31, parseInt(minSlotDaysInput.value, 10) || 6));
+        const bestSlots = calculateBestSlots(minDays);
 
-        // Generate the calendar
-        const startDate = new Date('2026-07-01');
-        const endDate = new Date('2026-08-31');
-        dateRange = [];
-
-        // Add offset for the first day of the month
-        const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-        const offset = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); // Adjust for Monday as the first day
-        for (let i = 0; i < offset; i++) {
-            const placeholderDiv = document.createElement('div');
-            placeholderDiv.className = 'calendar-day placeholder'; // Add a class for styling
-            calendarContainer.appendChild(placeholderDiv);
+        // Highlight set for calendar
+        const bestSlotDaysSet = new Set();
+        if (bestSlots.length > 0) {
+            bestSlots[0].slot.forEach(day => bestSlotDaysSet.add(day));
         }
 
-        for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'calendar-day';
-            dayDiv.textContent = date.getDate(); // Display only the day number
+        // Render Calendar
+        const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header-cell'));
+        calendarContainer.innerHTML = '';
+        headers.forEach(h => calendarContainer.appendChild(h));
 
-            const dateString = date.toISOString().split('T')[0];
-            const count = daysCount[dateString] || 0;
+        const firstDayOfWeek = startDate.getDay();
+        const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
-            // Verifica se la data è disabilitata
-            const isDisabled = isDateDisabled(dateString);
-            if (isDisabled) {
-                dayDiv.classList.add('disabled');
-                // Per i giorni disabilitati, mostra un colore speciale o aggiunge un'indicazione visiva
-                dayDiv.style.backgroundColor = '#999999';
-                dayDiv.style.color = '#ffffff';
-            } else {
-                // Set the background color based on the count for non-disabled days
-                if (maxCount > 0) {
-                    const opacity = count / maxCount; // Calculate opacity proportional to the count
-                    dayDiv.style.backgroundColor = `rgba(76, 175, 80, ${opacity})`; // Green with varying opacity
-                } else {
-                    dayDiv.style.backgroundColor = 'transparent'; // Default color if no data
+        for (let i = 0; i < offset; i++) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'calendar-day-cell placeholder';
+            calendarContainer.appendChild(placeholder);
+        }
+
+        dateRange.forEach(dateStr => {
+            const d = new Date(dateStr);
+            const dayCell = document.createElement('div');
+            const month = d.getMonth() + 1;
+            const count = daysCount[dateStr] || 0;
+            const ratio = totalRespondents > 0 ? count / totalRespondents : 0;
+
+            dayCell.className = `calendar-day-cell heatmap-cell month-${month}`;
+            dayCell.dataset.date = dateStr;
+
+            if (bestSlotDaysSet.has(dateStr)) {
+                dayCell.classList.add('in-best-slot');
+            }
+
+            // Heatmap color calculation
+            if (totalRespondents > 0) {
+                const alpha = Math.min(0.9, 0.05 + (ratio * 0.85));
+                dayCell.style.backgroundColor = `rgba(16, 185, 129, ${alpha})`;
+                dayCell.style.borderColor = ratio > 0.5 
+                    ? `rgba(52, 211, 153, ${0.3 + (ratio * 0.7)})` 
+                    : 'var(--border-subtle)';
+                if (ratio >= 0.7) {
+                    dayCell.style.color = '#ffffff';
+                    dayCell.style.fontWeight = '700';
                 }
             }
 
-            if (!isDisabled) {
-                dayDiv.classList.add('clickable-day');
-                dayDiv.title = 'Click per vedere quante persone sono presenti in questo giorno';
-                dayDiv.addEventListener('click', () => {
-                    openDayPopup(dateString, count, isDisabled);
-                });
-            }
+            dayCell.innerHTML = `
+                <span>${d.getDate()}</span>
+                <span class="day-count-badge" style="color: ${ratio > 0.6 ? '#d1fae5' : 'var(--text-muted)'};">
+                    ${count}${totalRespondents > 0 ? `/${totalRespondents}` : ''}
+                </span>
+            `;
 
-            calendarContainer.appendChild(dayDiv);
-            dateRange.push(dateString); // Add the date to the range
-        }
+            dayCell.title = `${formatDateItalian(dateStr)}: ${count} presenti su ${totalRespondents}`;
+            dayCell.addEventListener('click', () => openDayModal(dateStr, count, totalRespondents));
 
-        // Calculate the best N-day slot based on people available for the entire slot
-        const rawMinDays = parseInt(minSlotDaysInput.value, 10);
-        const N = Math.max(1, Math.min(dateRange.length, Number.isNaN(rawMinDays) ? 6 : rawMinDays));
+            calendarContainer.appendChild(dayCell);
+        });
+
+        // Display Best Slots in Hero Card
+        renderBestSlotsUI(bestSlots, totalRespondents);
+    }
+
+    // Smart Slot Calculation with graceful fallback if no 100% full attendance exists
+    function calculateBestSlots(N) {
+        if (availabilities.length === 0 || dateRange.length < N) return [];
+
         let bestSlots = [];
-        let maxFullyAvailablePeople = 0;
-
-        // Funzione per calcolare quante persone sono disponibili per tutti i giorni in uno slot
-        function countPeopleAvailableForEntireSlot(slot) {
-            return availabilities.filter(person => {
-                // Controlla se la persona è disponibile per tutti i giorni dello slot
-                return slot.every(day => person.days.includes(day));
-            }).length;
-        }
+        let maxFullyAvailable = -1;
+        let bestMean = -1;
 
         for (let i = 0; i <= dateRange.length - N; i++) {
-            // Verifica se questo slot contiene giorni disabilitati
-            let containsDisabledDay = false;
-            for (let j = 0; j < N; j++) {
-                if (isDateDisabled(dateRange[i + j])) {
-                    containsDisabledDay = true;
-                    break;
-                }
-            }
-            
-            // Salta questo slot se contiene giorni disabilitati
-            if (containsDisabledDay) continue;
-            
             let slot = dateRange.slice(i, i + N);
-            
-            // Calcola quante persone sono disponibili per tutto lo slot
-            const fullyAvailablePeople = countPeopleAvailableForEntireSlot(slot);
-            
-            // Calcola anche la media giornaliera per informazioni aggiuntive
-            const mean = slot.reduce((sum, day) => sum + (daysCount[day] || 0), 0) / N;
-            
-            // Cerca di espandere lo slot se anche i giorni adiacenti hanno lo stesso numero di persone completamente disponibili
+
+            // Count who is available every single day of this candidate slot
+            const fullyAvailable = availabilities.filter(p => {
+                const pDays = Array.isArray(p.days) ? p.days : [];
+                return slot.every(d => pDays.includes(d));
+            }).length;
+
+            const mean = slot.reduce((sum, d) => sum + (daysCount[d] || 0), 0) / N;
+
+            // Expand window dynamically if adjacent days have >= fullyAvailable
             let start = i;
             let end = i + N - 1;
-            
-            // Per l'espansione, controlliamo il numero di persone completamente disponibili
+
             while (start > 0) {
-                const expandedSlot = [dateRange[start-1], ...slot];
-                // Verifica che il giorno precedente non sia disabilitato
-                if (isDateDisabled(dateRange[start-1])) break;
-                
-                const expandedAvailability = countPeopleAvailableForEntireSlot(expandedSlot);
-                if (expandedAvailability >= fullyAvailablePeople) {
+                const prevDay = dateRange[start - 1];
+                const expanded = [prevDay, ...slot];
+                const countExp = availabilities.filter(p => expanded.every(d => p.days.includes(d))).length;
+                if (countExp >= fullyAvailable && fullyAvailable > 0) {
                     start--;
-                    slot = expandedSlot;
+                    slot = expanded;
                 } else {
                     break;
                 }
             }
-            
+
             while (end < dateRange.length - 1) {
-                const expandedSlot = [...slot, dateRange[end+1]];
-                // Verifica che il giorno successivo non sia disabilitato
-                if (isDateDisabled(dateRange[end+1])) break;
-                
-                const expandedAvailability = countPeopleAvailableForEntireSlot(expandedSlot);
-                if (expandedAvailability >= fullyAvailablePeople) {
+                const nextDay = dateRange[end + 1];
+                const expanded = [...slot, nextDay];
+                const countExp = availabilities.filter(p => expanded.every(d => p.days.includes(d))).length;
+                if (countExp >= fullyAvailable && fullyAvailable > 0) {
                     end++;
-                    slot = expandedSlot;
+                    slot = expanded;
                 } else {
                     break;
                 }
             }
 
-            // Check if this slot has more fully available people
-            if (fullyAvailablePeople > maxFullyAvailablePeople) {
-                maxFullyAvailablePeople = fullyAvailablePeople;
-                bestSlots = [{ slot, mean }]; // Reset to only this slot
-            } else if (fullyAvailablePeople === maxFullyAvailablePeople && fullyAvailablePeople > 0) {
-                const slotString = JSON.stringify(slot);
-                if (!bestSlots.some(item => JSON.stringify(item.slot) === slotString)) {
-                    bestSlots.push({ slot, mean });
+            const slotKey = `${slot[0]}_${slot[slot.length - 1]}`;
+
+            if (fullyAvailable > maxFullyAvailable) {
+                maxFullyAvailable = fullyAvailable;
+                bestMean = mean;
+                bestSlots = [{ slot, fullyAvailable, mean, key: slotKey }];
+            } else if (fullyAvailable === maxFullyAvailable) {
+                if (mean > bestMean) {
+                    bestMean = mean;
+                    bestSlots = [{ slot, fullyAvailable, mean, key: slotKey }];
+                } else if (Math.abs(mean - bestMean) < 0.05 && !bestSlots.some(s => s.key === slotKey)) {
+                    bestSlots.push({ slot, fullyAvailable, mean, key: slotKey });
                 }
             }
         }
 
-        // Display the best slots
-        if (bestSlots.length > 0) {
-            // Use innerHTML instead of textContent to properly handle line breaks
-            let slotsHtml = `Migliori slot con <strong>${maxFullyAvailablePeople}</strong> persone disponibili per l'intero periodo:`;
+        return bestSlots;
+    }
 
-            bestSlots.forEach((item, index) => {
-                const { slot, mean } = item;
-                const firstDay = slot[0].split('-').slice(1).reverse().join('/');
-                const lastDay = slot[slot.length - 1].split('-').slice(1).reverse().join('/');
-                
-                slotsHtml += `<div class="slot-item">
-                    <div class="slot-dates">Slot ${index + 1}: Dal ${firstDay} al ${lastDay}</div>
-                    <span class="availability-count">
-                        <div>Persone disponibili per tutti i ${slot.length} giorni: <strong>${maxFullyAvailablePeople}</strong></div>
-                        <div>Media giornaliera: <strong>${mean.toFixed(2)}</strong> persone/giorno</div>
-                    </span>
-                </div>`;
-            });
-            
-            slotInfo.innerHTML = slotsHtml;
+    function renderBestSlotsUI(bestSlots, totalRespondents) {
+        if (!bestSlots || bestSlots.length === 0 || totalRespondents === 0) {
+            slotContent.innerHTML = `
+                <div style="color: var(--text-secondary); padding: 12px 0;">
+                    Nessuna disponibilità registrata per questo Clan.<br>
+                    <a href="/add" class="btn btn-sm btn-primary" style="margin-top: 12px;">Aggiungi la prima risposta →</a>
+                </div>
+            `;
+            currentBestSlotSummary = null;
+            return;
+        }
+
+        let html = '';
+        bestSlots.slice(0, 3).forEach((item, idx) => {
+            const { slot, fullyAvailable, mean } = item;
+            const firstDate = formatShortDate(slot[0]);
+            const lastDate = formatShortDate(slot[slot.length - 1]);
+            const duration = slot.length;
+            const pct = totalRespondents > 0 ? Math.round((fullyAvailable / totalRespondents) * 100) : 0;
+
+            html += `
+                <div class="slot-item-result">
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-light); font-weight: 700;">Opzione ${idx + 1} (${duration} giorni)</div>
+                    <div class="slot-item-dates">Dal ${firstDate} al ${lastDate}</div>
+                    <div class="slot-item-stats">
+                        <span>👥 Presenti al 100%: <strong>${fullyAvailable} su ${totalRespondents} (${pct}%)</strong></span>
+                        <span>📊 Media giornaliera: <strong>${mean.toFixed(1)} presenze</strong></span>
+                    </div>
+                </div>
+            `;
+        });
+
+        slotContent.innerHTML = html;
+
+        // Save summary for WhatsApp
+        const top = bestSlots[0];
+        currentBestSlotSummary = {
+            startDate: formatShortDate(top.slot[0]),
+            endDate: formatShortDate(top.slot[top.slot.length - 1]),
+            duration: top.slot.length,
+            fullyAvailable: top.fullyAvailable,
+            total: totalRespondents,
+            pct: Math.round((top.fullyAvailable / totalRespondents) * 100),
+            mean: top.mean.toFixed(1)
+        };
+    }
+
+    // Modal Interaction
+    function openDayModal(dateStr, count, totalRespondents) {
+        const info = membersByDay[dateStr] || { present: [], absent: [] };
+        const pct = totalRespondents > 0 ? Math.round((count / totalRespondents) * 100) : 0;
+
+        modalDateTitle.textContent = formatDateItalian(dateStr);
+        modalRatioLabel.textContent = `${count} su ${totalRespondents} presenti (${pct}%)`;
+        modalProgressBar.style.width = `${pct}%`;
+
+        modalPresentCount.textContent = `(${info.present.length})`;
+        modalAbsentCount.textContent = `(${info.absent.length})`;
+
+        // Present list
+        if (info.present.length > 0) {
+            modalPresentList.innerHTML = info.present
+                .map(name => `<span class="name-badge present">✓ ${name}</span>`)
+                .join('');
         } else {
-            slotInfo.textContent = 'Nessun dato disponibile';
+            modalPresentList.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Nessun partecipante disponibile</span>';
         }
+
+        // Absent list
+        if (info.absent.length > 0) {
+            modalAbsentList.innerHTML = info.absent
+                .map(name => `<span class="name-badge absent">✕ ${name}</span>`)
+                .join('');
+        } else {
+            modalAbsentList.innerHTML = '<span style="color: var(--primary-light); font-size: 0.85rem; font-style: italic;">Tutto il Clan è presente! 🎉</span>';
+        }
+
+        dayModal.classList.add('active');
     }
 
-    function rerenderFromControl() {
-        if (!availabilities.length) return;
-        renderResults();
+    function closeDayModal() {
+        dayModal.classList.remove('active');
     }
 
-    function openDayPopup(dateString, count, isDisabled) {
-        const [year, month, day] = dateString.split('-');
-        dayPopupDate.textContent = `Data: ${day}/${month}/${year}`;
-        dayPopupCount.textContent = isDisabled
-            ? 'Questo giorno è disabilitato.'
-            : `Persone presenti: ${count}`;
-
-        dayPopupOverlay.classList.remove('hidden');
-        dayPopupOverlay.setAttribute('aria-hidden', 'false');
-    }
-
-    function closeDayPopup() {
-        dayPopupOverlay.classList.add('hidden');
-        dayPopupOverlay.setAttribute('aria-hidden', 'true');
-    }
-
-    dayPopupClose.addEventListener('click', closeDayPopup);
-    dayPopupOverlay.addEventListener('click', (event) => {
-        if (event.target === dayPopupOverlay) {
-            closeDayPopup();
+    modalCloseBtn?.addEventListener('click', closeDayModal);
+    modalDismissBtn?.addEventListener('click', closeDayModal);
+    dayModal?.addEventListener('click', (e) => {
+        if (e.target === dayModal) closeDayModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && dayModal.classList.contains('active')) {
+            closeDayModal();
         }
     });
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeDayPopup();
+    // Recompute on days control
+    applySlotDaysButton?.addEventListener('click', renderHeatmapAndSlots);
+    minSlotDaysInput?.addEventListener('change', renderHeatmapAndSlots);
+
+    // Share on WhatsApp
+    copyWhatsappBtn?.addEventListener('click', () => {
+        if (!currentBestSlotSummary) {
+            showToast('Nessun dato di slot calcolato da condividere.', 'error');
+            return;
         }
+
+        const text = 
+`🏕️ *PROPOSTA DATE ROUTE 2026 - Clan ${clanName}*
+
+🏆 *Miglior periodo (${currentBestSlotSummary.duration} giorni):*
+Dal ${currentBestSlotSummary.startDate} al ${currentBestSlotSummary.endDate}
+
+👥 *Presenti al 100%:* ${currentBestSlotSummary.fullyAvailable} su ${currentBestSlotSummary.total} (${currentBestSlotSummary.pct}%)
+📊 *Media presenze:* ${currentBestSlotSummary.mean} persone/giorno
+
+Visualizza la mappa completa o aggiorna le tue date:
+${window.location.origin}/results`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Riassunto copiato negli appunti! Incollalo su WhatsApp.', 'success');
+        }).catch(() => {
+            // Fallback for older browsers
+            prompt('Copia il seguente testo per WhatsApp:', text);
+        });
     });
 
-    applySlotDaysButton.addEventListener('click', rerenderFromControl);
-    minSlotDaysInput.addEventListener('change', rerenderFromControl);
+    // Helper date formatters
+    function formatDateItalian(dateString) {
+        const [y, m, d] = dateString.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        return dateObj.toLocaleDateString('it-IT', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    function formatShortDate(dateString) {
+        const [, m, d] = dateString.split('-');
+        return `${d}/${m}`;
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const icon = type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
 });
