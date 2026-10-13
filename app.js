@@ -11,11 +11,8 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Print available environment variables (for debugging)
-console.log('Available environment variables:', {
-    DATABASE_URL: process.env.DATABASE_URL ? 'Set (hidden for security)' : 'Not set',
-    POSTGRES_URL: process.env.POSTGRES_URL ? 'Set (hidden for security)' : 'Not set',
-});
+// Serve static assets from public/ directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Choose the best available connection URL
 const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
@@ -29,18 +26,17 @@ if (!connectionString) {
 const sql = neon(connectionString);
 
 const normalizeName = (name) => (typeof name === 'string' ? name.trim() : '');
+const normalizeClan = (clan) => (typeof clan === 'string' && clan.trim() ? clan.trim() : 'default');
 
 // Initialize database connection with retries
 async function initializeDbConnection(retries = 5) {
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
             console.log(`Connection attempt ${attempt} of ${retries}...`);
-            // Test if the database is properly set up
             const testResult = await sql`SELECT NOW()`;
-            console.log('✓ Successfully connected to Neon database');
-            console.log('✓ Database connection test successful:', testResult[0]);
-            
-            // Check if availability table exists, create if not
+            console.log('✓ Successfully connected to Neon database:', testResult[0]);
+
+            // Ensure availability table exists
             const tableCheck = await sql`
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables 
@@ -48,7 +44,7 @@ async function initializeDbConnection(retries = 5) {
                     AND table_name = 'availability'
                 );
             `;
-            
+
             if (!tableCheck[0].exists) {
                 console.log('Creating availability table...');
                 await sql`
@@ -64,7 +60,6 @@ async function initializeDbConnection(retries = 5) {
             } else {
                 console.log('✓ Availability table already exists');
 
-                // Ensure legacy schemas are upgraded for clan-scoped data isolation.
                 const columns = await sql`
                     SELECT column_name
                     FROM information_schema.columns
@@ -85,9 +80,7 @@ async function initializeDbConnection(retries = 5) {
                 if (!columnNames.includes('id')) {
                     console.log('Adding surrogate "id" primary key to availability table...');
                     await sql`ALTER TABLE availability ADD COLUMN id SERIAL;`;
-
                     await sql`ALTER TABLE availability DROP CONSTRAINT IF EXISTS availability_pkey;`;
-
                     await sql`ALTER TABLE availability ADD PRIMARY KEY (id);`;
                     console.log('✓ "id" primary key added');
                 }
@@ -98,14 +91,30 @@ async function initializeDbConnection(retries = 5) {
                 `;
                 console.log('✓ Unique index on (name, clan) ensured');
             }
-            
+
+            // Ensure clans table exists
+            await sql`
+                CREATE TABLE IF NOT EXISTS clans (
+                    name TEXT PRIMARY KEY
+                );
+            `;
+            console.log('✓ Clans table ensured');
+
+            // Populate clans table from existing availability data if any
+            await sql`
+                INSERT INTO clans (name)
+                SELECT DISTINCT clan FROM availability
+                WHERE clan IS NOT NULL AND clan != ''
+                ON CONFLICT (name) DO NOTHING;
+            `;
+
             return true;
         } catch (err) {
             console.error(`Database connection attempt ${attempt} failed:`, err.message);
-            
+
             if (attempt < retries) {
-                const delay = 2000 * attempt; // Exponential backoff
-                console.log(`Retrying in ${delay/1000} seconds...`);
+                const delay = 2000 * attempt;
+                console.log(`Retrying in ${delay / 1000} seconds...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } else {
                 console.error('All connection attempts failed. Please check your database configuration.');
@@ -116,272 +125,225 @@ async function initializeDbConnection(retries = 5) {
     return false;
 }
 
-// Helper function to fetch data from Neon
-const fetchAvailabilityData = async (clan) => {
-    try {
-        const rows = await sql`SELECT * FROM availability WHERE clan=${clan}`;
-        return rows; // Return rows (data)
-    } catch (err) {
-        console.error('Error fetching data from database:', err.message);
-        throw new Error('Failed to fetch data from Neon database');
-    }
-};
+// ==========================================
+// API Endpoints
+// ==========================================
 
-// Helper function to save data to Neon
-const saveAvailabilityData = async (dataArray, clan) => {
-    try {
-        for (const entry of dataArray) {
-            const { name, days } = entry;
-            const normalizedName = normalizeName(name);
-
-            if (!normalizedName) {
-                throw new Error('Invalid name');
-            }
-
-            // Insert or update data in Neon
-            await sql`
-                INSERT INTO availability (name, days, clan) 
-                VALUES (${normalizedName}, ${JSON.stringify(days)}, ${clan}) 
-                ON CONFLICT (name, clan)
-                DO UPDATE SET days = ${JSON.stringify(days)}
-            `;
-        }
-        console.log('Data successfully saved to Neon database');
-    } catch (err) {
-        console.error('Error saving data to Neon database:', err.message);
-        throw new Error('Failed to save data to Neon database');
-    }
-};
-
-// Route to handle POST request to save availability
-app.post('/api/availability', async (req, res) => {
-    const { name, days, clan } = req.body;
-    const normalizedName = normalizeName(name);
-
-    if (!normalizedName || !days || !Array.isArray(days)) {
-        return res.status(400).json({ error: 'Invalid data' });
-    }
-
-    try {
-        let availabilities = await fetchAvailabilityData(clan);
-        console.log(availabilities); // Log fetched data for debugging
-        console.log('Clan before post:', clan);
-
-        const existingIndex = availabilities.findIndex(entry => normalizeName(entry.name).toLowerCase() === normalizedName.toLowerCase());
-        if (existingIndex !== -1) {
-            const existingDays = availabilities[existingIndex].days;
-            const updatedDays = [...new Set([...existingDays, ...days])];
-            availabilities[existingIndex].days = updatedDays;
-        } else {
-            availabilities.push({ name: normalizedName, days });
-        }
-
-        await saveAvailabilityData(availabilities, clan);
-
-        res.status(200).json({ message: 'Availability submitted successfully' });
-    } catch (err) {
-        console.error('Error handling POST request:', err.message);
-        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
-    }
-});
-
-// Route to handle GET request for availability
-app.get('/api/availability', async (req, res) => {
-    try {
-        const clan = req.query.clan;
-        console.log('Clan:', clan); // Log the clan for debugging
-        const availabilities = await fetchAvailabilityData(clan);
-        res.status(200).json(availabilities);
-    } catch (err) {
-        console.error('Error handling GET request:', err.message);
-        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
-    }
-});
-
-// Route to handle GET request for a specific user's availability
-app.get('/api/user/:name', async (req, res) => {
-    try {
-        const name = normalizeName(req.params.name);
-        const clan = req.query.clan;
-        const availabilities = await fetchAvailabilityData(clan);
-        const userAvailability = availabilities.find(entry => normalizeName(entry.name).toLowerCase() === name.toLowerCase());
-        
-        if (!userAvailability) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        res.status(200).json(userAvailability);
-    } catch (err) {
-        console.error('Error handling GET request for user:', err.message);
-        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
-    }
-});
-
-// Route to handle PUT request to update availability
-app.put('/api/availability', async (req, res) => {
-    const { name, days, clan} = req.body;
-    const normalizedName = normalizeName(name);
-    console.log('Received PUT request:', req.body);
-
-    if (!normalizedName || !days || !Array.isArray(days)) {
-        return res.status(400).json({ error: 'Invalid data' });
-    }
-
-    try {
-        let availabilities = await fetchAvailabilityData(clan);
-        const existingIndex = availabilities.findIndex(entry => normalizeName(entry.name).toLowerCase() === normalizedName.toLowerCase());
-        
-        if (existingIndex === -1) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        // Update the user's days
-        availabilities[existingIndex].days = days;
-        
-        console.log('Updated availability :', availabilities[existingIndex]);
-        console.log('Clan before put:', clan);
-        await saveAvailabilityData(availabilities, clan);
-        
-        res.status(200).json({ message: 'Availability updated successfully' });
-    } catch (err) {
-        console.error('Error handling PUT request:', err.message);
-        res.status(500).json({ error: 'Error interacting with Neon database', details: err.message });
-    }
-});
-
-
-// Add API endpoint to get all clan tables
+// Get all clans
 app.get('/api/clans', async (req, res) => {
     try {
-        const names = await sql`
-            SELECT name FROM clans;
+        const rows = await sql`
+            SELECT name FROM clans ORDER BY name ASC;
         `;
+        const clans = rows.map(r => r.name);
 
-        const clans = names.map(row => {
-            return row.name;
-        });
-        
-        console.log('Clans found:', clans);
-        
         res.status(200).json({
             status: 'success',
             count: clans.length,
             clans
         });
     } catch (err) {
-        console.error('Error fetching clan tables:', err);
+        console.error('Error fetching clans:', err);
         res.status(500).json({
             status: 'error',
-            message: 'Failed to fetch clan tables',
+            message: 'Failed to fetch clans',
             error: err.message
         });
     }
 });
 
-// Add API endpoint to create a new clan
+// Create a new clan
 app.post('/api/clan', async (req, res) => {
-    console.log('Received clan creation request:', req.body);
-    
     try {
-        const { clanName } = req.body;
-        
+        const clanName = normalizeName(req.body.clanName);
+
         if (!clanName) {
-            return res.status(400).json({ success: false, message: 'Nome clan mancante' });
+            return res.status(400).json({ success: false, message: 'Nome clan non valido o vuoto' });
         }
-        
-        console.log(`Processing clan "${clanName}"`);
-        
-        const tableCheck = await sql`
-            SELECT EXISTS (
-                SELECT FROM clans 
-                WHERE name = ${clanName}
-            ) AS exists
+
+        const existing = await sql`
+            SELECT name FROM clans WHERE LOWER(name) = LOWER(${clanName});
         `;
-        
-        let isNew = !tableCheck[0].exists;
-        
-        console.log(`Clan exists: ${!isNew}, isNew: ${isNew}`);
-        
+
+        const isNew = existing.length === 0;
+
         if (isNew) {
-            // Insert the new clan
             await sql`
-                INSERT INTO clans (name)
-                VALUES (${clanName})
+                INSERT INTO clans (name) VALUES (${clanName})
+                ON CONFLICT (name) DO NOTHING;
             `;
-            console.log(`✓ Clan "${clanName}" created successfully`);
-        } else {
-            console.log(`Clan "${clanName}" already exists`);
+            console.log(`✓ Clan "${clanName}" creato con successo`);
         }
-        
-        res.status(200).json({ 
-            success: true, 
-            message: isNew ? 'Clan created successfully' : 'Clan already exists',
-            isNew: isNew,
-            clanName: clanName
+
+        res.status(200).json({
+            success: true,
+            message: isNew ? 'Clan creato con successo' : 'Clan già esistente',
+            isNew,
+            clanName: isNew ? clanName : existing[0].name
         });
     } catch (err) {
-        console.error('Error processing clan:', err);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error', 
-            details: err.message 
+        console.error('Error creating clan:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Errore durante la creazione del clan',
+            details: err.message
         });
     }
 });
 
-// Serve results.html for the /results route
-app.get('/results', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'results.html'));
+// Get all members for a clan (names and day count)
+app.get('/api/members', async (req, res) => {
+    try {
+        const clan = normalizeClan(req.query.clan);
+        const rows = await sql`
+            SELECT name, jsonb_array_length(days) AS day_count
+            FROM availability
+            WHERE clan = ${clan}
+            ORDER BY name ASC;
+        `;
+
+        res.status(200).json({
+            status: 'success',
+            count: rows.length,
+            members: rows
+        });
+    } catch (err) {
+        console.error('Error fetching members:', err);
+        res.status(500).json({ error: 'Errore nel recupero dei partecipanti', details: err.message });
+    }
 });
 
-app.get('/modify', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'modify.html'));
+// Get availability for all users in a clan
+app.get('/api/availability', async (req, res) => {
+    try {
+        const clan = normalizeClan(req.query.clan);
+        const rows = await sql`
+            SELECT id, name, clan, days
+            FROM availability
+            WHERE clan = ${clan}
+            ORDER BY name ASC;
+        `;
+        res.status(200).json(rows);
+    } catch (err) {
+        console.error('Error handling GET /api/availability:', err.message);
+        res.status(500).json({ error: 'Errore nel recupero delle disponibilità', details: err.message });
+    }
 });
 
-app.get('/add', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'add.html'));
+// Get availability for a specific user
+app.get('/api/user/:name', async (req, res) => {
+    try {
+        const name = normalizeName(req.params.name);
+        const clan = normalizeClan(req.query.clan);
+
+        if (!name) {
+            return res.status(400).json({ error: 'Nome non specificato' });
+        }
+
+        const rows = await sql`
+            SELECT id, name, clan, days
+            FROM availability
+            WHERE LOWER(name) = LOWER(${name}) AND clan = ${clan};
+        `;
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Utente non trovato' });
+        }
+
+        res.status(200).json(rows[0]);
+    } catch (err) {
+        console.error('Error handling GET /api/user/:name:', err.message);
+        res.status(500).json({ error: 'Errore nel recupero dati utente', details: err.message });
+    }
 });
 
-// Serve index.html for the / route
-app.get('/clan-select', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'clan-select.html'));
+// Save or overwrite availability for a user (atomic upsert)
+app.post('/api/availability', async (req, res) => {
+    const { name, days, clan } = req.body;
+    const normalizedName = normalizeName(name);
+    const normalizedClan = normalizeClan(clan);
+
+    if (!normalizedName || !Array.isArray(days)) {
+        return res.status(400).json({ error: 'Dati non validi: nome e giorni sono obbligatori' });
+    }
+
+    try {
+        // Ensure clan exists
+        await sql`
+            INSERT INTO clans (name) VALUES (${normalizedClan})
+            ON CONFLICT (name) DO NOTHING;
+        `;
+
+        // Upsert availability directly into PostgreSQL
+        await sql`
+            INSERT INTO availability (name, days, clan)
+            VALUES (${normalizedName}, ${JSON.stringify(days)}, ${normalizedClan})
+            ON CONFLICT (name, clan)
+            DO UPDATE SET days = ${JSON.stringify(days)};
+        `;
+
+        res.status(200).json({ message: 'Disponibilità salvata con successo' });
+    } catch (err) {
+        console.error('Error handling POST /api/availability:', err.message);
+        res.status(500).json({ error: 'Errore nel salvataggio della disponibilità', details: err.message });
+    }
 });
+
+// Update availability for an existing user
+app.put('/api/availability', async (req, res) => {
+    const { name, days, clan } = req.body;
+    const normalizedName = normalizeName(name);
+    const normalizedClan = normalizeClan(clan);
+
+    if (!normalizedName || !Array.isArray(days)) {
+        return res.status(400).json({ error: 'Dati non validi: nome e giorni sono obbligatori' });
+    }
+
+    try {
+        const result = await sql`
+            UPDATE availability
+            SET days = ${JSON.stringify(days)}
+            WHERE LOWER(name) = LOWER(${normalizedName}) AND clan = ${normalizedClan}
+            RETURNING id, name;
+        `;
+
+        if (result.length === 0) {
+            return res.status(404).json({ error: 'Utente non trovato nel clan specificato' });
+        }
+
+        res.status(200).json({ message: 'Disponibilità aggiornata con successo' });
+    } catch (err) {
+        console.error('Error handling PUT /api/availability:', err.message);
+        res.status(500).json({ error: 'Errore nell\'aggiornamento della disponibilità', details: err.message });
+    }
+});
+
+// ==========================================
+// Page Routes
+// ==========================================
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'clan-select.html'));
+    res.sendFile(path.join(__dirname, 'views', 'clan-select.html'));
+});
+
+app.get('/clan-select', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'clan-select.html'));
 });
 
 app.get('/home', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'views', 'home.html'));
+    res.sendFile(path.join(__dirname, 'views', 'home.html'));
 });
 
-// Add route for the clan selection page JavaScript
-app.get('/js/clan-select.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'clan-select.js'));
+app.get('/add', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'add.html'));
 });
 
-app.get('/css/styles.css', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/css', 'styles.css'));
+app.get('/modify', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'modify.html'));
 });
 
-app.get('/js/script.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'script.js'));
-});
-
-app.get('/js/home.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'home.js'));
-});
-
-app.get('/js/results.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'results.js'));
-});
-
-app.get('/js/modify.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'modify.js'));
-});
-
-app.get('/js/add.js', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'public/js', 'add.js'));
+app.get('/results', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'results.html'));
 });
 
 // Start the server only after trying to establish DB connection
@@ -389,11 +351,10 @@ initializeDbConnection().then(connected => {
     if (connected) {
         app.listen(port, () => {
             console.log(`✓ Server is running on port ${port}`);
-            console.log(`• Try the database test endpoint: http://localhost:${port}/api/dbtest`);
         });
     } else {
         console.error('✗ Server not started due to database connection failure');
-        process.exit(1); // Exit the application with an error code
+        process.exit(1);
     }
 });
 
