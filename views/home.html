@@ -1,38 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route 2025 - Home</title>
+    <title>Route Planner - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="themed-background">
-    <h1>Gruppo <span id="clan-name"></span></h1>
-    
-    <div class="home-container">
-        <h2>Seleziona un'opzione:</h2>
-        
-        <div class="button-container">
-            <button onclick="window.location.href='/add'" class="home-button add-button">
-                Aggiungi Nuovi Dati
-            </button>
-            
-            <button onclick="window.location.href='/modify'" class="home-button modify-button">
-                Modifica i Tuoi Dati
-            </button>
-            
-            <button onclick="window.location.href='/results'" class="home-button view-button">
-                Visualizza Tutti i Dati
-            </button>
-            
-            <button onclick="window.location.href='/clan-select'" class="back-button">
-                Cambia Gruppo
-            </button>
+<body>
+    <header class="app-navbar">
+        <a href="/home" class="brand-link">
+            <span class="brand-icon">🏕️</span>
+            <span class="brand-text">Route Planner</span>
+        </a>
+        <div class="nav-clan-badge">
+            <span class="clan-indicator"></span>
+            <span>Clan: <span class="clan-name" id="nav-clan-name">...</span></span>
+            <a href="/clan-select">Cambia</a>
         </div>
-    </div>
-    
-    <div id="end">Made by Gioele Rora</div>
-    
+    </header>
+
+    <main class="app-container">
+        <div class="page-header">
+            <h1 class="page-title">Clan <span id="display-clan-name" style="color: var(--primary-light);">...</span></h1>
+            <p class="page-subtitle">Pianifica le date della Route estiva con il tuo gruppo. Scegli cosa vuoi fare:</p>
+        </div>
+
+        <!-- Clan stats summary card -->
+        <div class="glass-card" id="stats-card">
+            <div class="clan-stats-bar">
+                <div class="clan-stats-info">
+                    <span style="font-size: 2rem;">👥</span>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Risposte ricevute</div>
+                        <div class="clan-stats-count" id="member-count-label">Caricamento...</div>
+                    </div>
+                </div>
+                <a href="/results" class="btn btn-sm btn-secondary">Vedi Heatmap →</a>
+            </div>
+
+            <div id="members-container">
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Membri che hanno risposto:</div>
+                <div class="clan-members-preview" id="members-list">
+                    <span class="member-chip">Caricamento partecipanti...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Action Cards Grid -->
+        <div class="home-menu-grid">
+            <a href="/add" class="menu-card add">
+                <div class="menu-card-icon">✍️</div>
+                <h2 class="menu-card-title">Aggiungi Disponibilità</h2>
+                <p class="menu-card-desc">Inserisci il tuo nome e seleziona i giorni in cui sei libero tra Luglio e Agosto.</p>
+                <span class="menu-card-arrow">Compila adesso →</span>
+            </a>
+
+            <a href="/modify" class="menu-card modify">
+                <div class="menu-card-icon">🔄</div>
+                <h2 class="menu-card-title">Modifica i Tuoi Dati</h2>
+                <p class="menu-card-desc">I tuoi piani sono cambiati? Cerca il tuo nome e aggiorna le date selezionate.</p>
+                <span class="menu-card-arrow" style="color: var(--july-color);">Modifica risposte →</span>
+            </a>
+
+            <a href="/results" class="menu-card results">
+                <div class="menu-card-icon">🏆</div>
+                <h2 class="menu-card-title">Visualizza Risultati</h2>
+                <p class="menu-card-desc">Esplora la mappa termica delle presenze e calcola il miglior periodo per la Route.</p>
+                <span class="menu-card-arrow" style="color: var(--accent-light);">Guarda slot migliore →</span>
+            </a>
+        </div>
+    </main>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="app-footer">
+        <div>Route Planner &bull; Made with &hearts; for Scouts by Gioele Rora</div>
+    </footer>
+
     <script src="/js/home.js"></script>
 </body>
 </html>
