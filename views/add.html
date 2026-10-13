@@ -1,41 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Route 2025</title>
-    <link rel="stylesheet" href="/css/styles.css"> <!-- Corrected path -->
+    <title>Route Planner - Aggiungi Disponibilità</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="themed-background">
-    <h1>Route 2025</h1>
-    <form id="availability-form">
-        <div id="luglio-agosto-container">
-            <input type="text" id="name" placeholder="Nome" required>
-            <div id="luglio">Luglio</div>
-            <div id="agosto">Agosto</div>
+<body>
+    <header class="app-navbar">
+        <a href="/home" class="brand-link">
+            <span class="brand-icon">🏕️</span>
+            <span class="brand-text">Route Planner</span>
+        </a>
+        <div class="nav-clan-badge">
+            <span class="clan-indicator"></span>
+            <span>Clan: <span class="clan-name" id="nav-clan-name">...</span></span>
+            <a href="/home">← Dashboard</a>
         </div>
-        <div id="calendar">
-            <div class="calendar-header">Lunedì</div>
-            <div class="calendar-header">Martedì</div>
-            <div class="calendar-header">Mercoledì</div>
-            <div class="calendar-header">Giovedì</div>
-            <div class="calendar-header">Venerdì</div>
-            <div class="calendar-header">Sabato</div>
-            <div class="calendar-header">Domenica</div>
+    </header>
+
+    <main class="app-container">
+        <div class="page-header">
+            <h1 class="page-title">Indica le tue date</h1>
+            <p class="page-subtitle">Inserisci il tuo nome e tocca o trascina sui giorni del calendario in cui sei disponibile per la Route.</p>
         </div>
-        <button type="submit">Invia</button>
-    </form>
-    <div id="result"></div>
-    
-    <!-- Aggiungi un div per spaziare dal footer fisso -->
-    <div style="height: 100px;"></div>
-    
-    <!-- Contenitore fisso per il pulsante in fondo alla pagina -->
-    <div class="bottom-fixed-container">
-        <button onclick="window.location.href='/home'" class="back-button">Torna alla Home</button>
-        <div id="end">Made by Gioele Rora</div>
-    </div>
-    
-    <script src="/js/add.js"></script> <!-- Updated script reference -->
+
+        <form id="availability-form">
+            <div class="glass-card">
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="name" class="input-label">Il tuo Nome e Cognome / Soprannome:</label>
+                    <input type="text" id="name" class="form-control" placeholder="Es. Marco, Chiara R., Frate..." required autocomplete="name">
+                </div>
+
+                <!-- Calendar Toolbar & Quick Actions -->
+                <div class="calendar-toolbar">
+                    <div class="month-badges-group">
+                        <span class="month-badge july">Luglio 2026</span>
+                        <span class="month-badge august">Agosto 2026</span>
+                    </div>
+
+                    <div class="quick-actions-group">
+                        <button type="button" id="btn-quick-weekends" class="quick-action-btn">Tutti i weekend</button>
+                        <button type="button" id="btn-quick-july" class="quick-action-btn">Tutto Luglio</button>
+                        <button type="button" id="btn-quick-august" class="quick-action-btn">Tutto Agosto</button>
+                        <button type="button" id="btn-quick-clear" class="quick-action-btn" style="color: var(--danger);">Svuota</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid Container -->
+                <div id="calendar" class="calendar-grid">
+                    <div class="calendar-header-cell">Lun</div>
+                    <div class="calendar-header-cell">Mar</div>
+                    <div class="calendar-header-cell">Mer</div>
+                    <div class="calendar-header-cell">Gio</div>
+                    <div class="calendar-header-cell">Ven</div>
+                    <div class="calendar-header-cell">Sab</div>
+                    <div class="calendar-header-cell">Dom</div>
+                </div>
+
+                <!-- Selection Counter & Submit -->
+                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+                    <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                        Giorni selezionati: <strong id="selected-counter" style="color: var(--primary-light); font-size: 1.1rem;">0</strong> / 62
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <a href="/home" class="btn btn-secondary">Annulla</a>
+                        <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">
+                            <span>Conferma e Salva</span>
+                            <span>✓</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="app-footer">
+        <div>Route Planner &bull; Made with &hearts; for Scouts by Gioele Rora</div>
+    </footer>
+
+    <script src="/js/add.js"></script>
 </body>
 </html>

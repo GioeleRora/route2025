@@ -1,336 +1,290 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Costante per controllare il blocco dei giorni specifici (26 luglio - 5 agosto)
-    const DISABLE_SPECIFIC_DAYS = false;
-
-    // Funzione per verificare se una data è nell'intervallo bloccato
-    function isDateDisabled(dateString) {
-        if (!DISABLE_SPECIFIC_DAYS) return false;
-        
-        const date = new Date(dateString);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        
-        // Controlla se è tra il 26 luglio e il 5 agosto inclusi
-        return (month === 7 && day >= 26) || (month === 8 && day <= 5);
+document.addEventListener('DOMContentLoaded', async () => {
+    const clanName = localStorage.getItem('currentClan');
+    if (!clanName) {
+        window.location.href = '/clan-select';
+        return;
     }
 
-    const searchButton = document.getElementById('search-button');
-    const nameInput = document.getElementById('name-search');
-    const userDataDiv = document.getElementById('user-data');
-    const messageDiv = document.getElementById('message');
+    const navClanName = document.getElementById('nav-clan-name');
+    if (navClanName) navClanName.textContent = clanName;
+
+    const memberSelect = document.getElementById('member-select');
+    const editorCard = document.getElementById('editor-card');
+    const currentUserDisplay = document.getElementById('current-user-display');
     const calendarContainer = document.getElementById('calendar');
-    const form = document.getElementById('availability-form');
-    const calendarPlaceholder = document.getElementById('calendar-placeholder');
-    
-    let currentUserData = null;
+    const selectedCounter = document.getElementById('selected-counter');
+    const updateBtn = document.getElementById('update-btn');
+
+    const YEAR = 2026;
+    const startDate = new Date(`${YEAR}-07-01`);
+    const endDate = new Date(`${YEAR}-08-31`);
+
+    let currentSelectedMember = null;
     let isDragging = false;
-    let startDayIndex = null;
+    let startDayCell = null;
     let isSelectMode = true;
 
-    // Funzione per gestire la visibilità del placeholder basata sulla visibilità dei dati dell'utente
-    function updatePlaceholderVisibility() {
-        if (userDataDiv.style.display === 'none') {
-            calendarPlaceholder.style.display = 'block';
-        } else {
-            calendarPlaceholder.style.display = 'none';
-        }
-    }
+    // Load registered members into select
+    loadMembers();
 
-    // Inizializzazione
-    updatePlaceholderVisibility();
-
-    // Set up search functionality
-    searchButton.addEventListener('click', async () => {
-        const name = nameInput.value.trim();
-        nameInput.value = name;
-        if (!name) {
-            showMessage('Inserisci un nome per cercare i tuoi dati.', 'error');
-            return;
-        }
-        
+    async function loadMembers() {
         try {
-            const response = await fetch(`/api/user/${encodeURIComponent(name)}?clan=${localStorage.getItem('currentClan')}`);
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    showMessage(`Nessun dato trovato per "${name}".`, 'error');
-                } else {
-                    showMessage('Errore durante il recupero dei dati.', 'error');
-                }
-                userDataDiv.style.display = 'none';
-                updatePlaceholderVisibility();
+            const response = await fetch(`/api/members?clan=${encodeURIComponent(clanName)}`);
+            const data = await response.json();
+            const members = data.members || [];
+
+            memberSelect.innerHTML = '<option value="">-- Seleziona il tuo nome --</option>';
+
+            if (members.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Nessun partecipante registrato. Aggiungi prima la tua disponibilità!';
+                opt.disabled = true;
+                memberSelect.appendChild(opt);
                 return;
             }
-            
-            const userData = await response.json();
-            currentUserData = userData;
-            
-            // Show the user data section
-            userDataDiv.style.display = 'block';
-            
-            updatePlaceholderVisibility();
-            
-            // Initialize calendar
-            initializeCalendar(userData.days);
-            showMessage(`Dati trovati per "${userData.name}". Puoi modificare la tua disponibilità.`, 'success');
-            
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-            showMessage('Errore di rete durante il recupero dei dati.', 'error');
-            userDataDiv.style.display = 'none';
-            updatePlaceholderVisibility();
-        }
-    });
-    
-    // Function to initialize the calendar with user data
-    function initializeCalendar(selectedDays) {
 
-            // Clear existing calendar days (except headers)
-            const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header'));
-            calendarContainer.innerHTML = '';
-            
-            // Re-add headers
-            headers.forEach(header => calendarContainer.appendChild(header));
-    
-        
-        const startDate = new Date('2026-07-01');
-        const endDate = new Date('2026-08-31');
-        
-        // Add offset for the first day of the month
-        const firstDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-        const offset = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1); // Adjust for Monday as the first day
-        
-        // Add placeholder elements for proper alignment
-        for (let i = 0; i < offset; i++) {
-            const placeholderDiv = document.createElement('div');
-            placeholderDiv.className = 'calendar-day placeholder'; // Add a class for styling
-            calendarContainer.appendChild(placeholderDiv);
-        }
-        
-        // Generate calendar
-        for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'calendar-day';
-            const dateString = date.toISOString().split('T')[0]; // Store the date in a data attribute
-            dayDiv.dataset.date = dateString;
-            dayDiv.textContent = date.getDate(); // Display only the day number
-            
-            // Check if the day is in the user's selected days
-            if (selectedDays.includes(dateString)) {
-                dayDiv.classList.add('selected');
-            }
-            
-            // Verifica se la data è disabilitata
-            const isDisabled = isDateDisabled(dateString);
-            if (isDisabled) {
-                dayDiv.classList.add('disabled');
-            }
-            
-            // Apply background color based on the month
-            const month = date.getMonth() + 1; // Months are 0-indexed
-            if (month === 7) {
-                dayDiv.style.backgroundColor = '#87CEEB'; // Sky blue for July
-            } else if (month === 8) {
-                dayDiv.style.backgroundColor = '#9370DB'; // Medium purple for August
-            }
-            
-            // Add mouse event listeners
-            dayDiv.addEventListener('mousedown', (e) => {
-                if (isDisabled) return; // Non fare nulla se il giorno è disabilitato
-                
-                isDragging = true;
-                const index = Array.from(calendarContainer.children).indexOf(dayDiv);
-                startDayIndex = index;
-                isSelectMode = !dayDiv.classList.contains('selected');
-                toggleDaySelection(dayDiv, isSelectMode);
+            members.forEach(member => {
+                const opt = document.createElement('option');
+                opt.value = member.name;
+                opt.textContent = `${member.name} (${member.day_count} giorni)`;
+                memberSelect.appendChild(opt);
             });
-            
-            dayDiv.addEventListener('mouseenter', () => {
-                if (isDragging && !isDisabled) { // Controlla anche qui se il giorno è disabilitato
-                    const index = Array.from(calendarContainer.children).indexOf(dayDiv);
-                    selectDaysInPattern(startDayIndex, index, isSelectMode);
-                }
-            });
-            
-            // Add touch event listeners
-            dayDiv.addEventListener('touchstart', (e) => {
-                if (isDisabled) return; // Non fare nulla se il giorno è disabilitato
-                
-                e.preventDefault();
-                isDragging = true;
-                const index = Array.from(calendarContainer.children).indexOf(dayDiv);
-                startDayIndex = index;
-                isSelectMode = !dayDiv.classList.contains('selected');
-                toggleDaySelection(dayDiv, isSelectMode);
-            });
-            
-            dayDiv.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                
-                const touch = e.touches[0];
-                const elementAtTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                if (elementAtTouch && elementAtTouch.classList.contains('calendar-day') && 
-                    !elementAtTouch.classList.contains('disabled')) {
-                    const index = Array.from(calendarContainer.children).indexOf(elementAtTouch);
-                    selectDaysInPattern(startDayIndex, index, isSelectMode);
-                }
-            });
-            
-            calendarContainer.appendChild(dayDiv);
-        }
-        
-        // Add visual cues for selection mode
-        addSelectionVisualCues();
-    }
-    
-    // Add touch and mouse event listeners to handle drag end
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        startDayIndex = null;
-        calendarContainer.classList.remove('select-mode', 'deselect-mode');
-    });
-    
-    document.addEventListener('touchend', () => {
-        isDragging = false;
-        startDayIndex = null;
-        calendarContainer.classList.remove('select-mode', 'deselect-mode');
-    });
-    
-    // Function to add visual cues for selection mode
-    function addSelectionVisualCues() {
-        calendarContainer.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('calendar-day')) {
-                if (!e.target.classList.contains('selected')) {
-                    calendarContainer.classList.add('select-mode');
-                    calendarContainer.classList.remove('deselect-mode');
-                } else {
-                    calendarContainer.classList.add('deselect-mode');
-                    calendarContainer.classList.remove('select-mode');
-                }
-            }
-        });
-        
-        calendarContainer.addEventListener('touchstart', (e) => {
-            const touchedElement = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-            if (touchedElement && touchedElement.classList.contains('calendar-day')) {
-                if (!touchedElement.classList.contains('selected')) {
-                    calendarContainer.classList.add('select-mode');
-                    calendarContainer.classList.remove('deselect-mode');
-                } else {
-                    calendarContainer.classList.add('deselect-mode');
-                    calendarContainer.classList.remove('select-mode');
-                }
-            }
-        });
-    }
-    
-    // Function to toggle day selection
-    function toggleDaySelection(dayDiv, selectMode) {
-        // Non permettere la selezione di giorni disabilitati
-        if (dayDiv.classList.contains('disabled')) return;
-        
-        if (selectMode) {
-            dayDiv.classList.add('selected');
-        } else {
-            dayDiv.classList.remove('selected');
+        } catch (err) {
+            console.error('Error loading members:', err);
+            memberSelect.innerHTML = '<option value="">Errore nel caricamento partecipanti</option>';
+            showToast('Impossibile caricare l\'elenco dei partecipanti.', 'error');
         }
     }
-    
-    // Function to select days in a pattern
-    function selectDaysInPattern(startIndex, endIndex, selectMode) {
-        const totalColumns = 7; // Number of columns in the grid
-        const startRow = Math.floor(startIndex / totalColumns);
-        const endRow = Math.floor(endIndex / totalColumns);
-        
-        if (startRow === endRow) {
-            // If dragging within the same row, select all days between startIndex and endIndex
-            for (let i = Math.min(startIndex, endIndex); i <= Math.max(startIndex, endIndex); i++) {
-                // Salta i giorni disabilitati
-                if (!calendarContainer.children[i].classList.contains('disabled')) {
-                    toggleDaySelection(calendarContainer.children[i], selectMode);
-                }
-            }
-        } else if (endRow > startRow) {
-            // Stesse modifiche per tutte le sezioni della selezione
-            for (let i = startIndex; i < (startRow + 1) * totalColumns; i++) {
-                if (!calendarContainer.children[i].classList.contains('disabled')) {
-                    toggleDaySelection(calendarContainer.children[i], selectMode);
-                }
-            }
-            
-            for (let row = startRow + 1; row < endRow; row++) {
-                for (let i = row * totalColumns; i < (row + 1) * totalColumns; i++) {
-                    if (!calendarContainer.children[i].classList.contains('disabled')) {
-                        toggleDaySelection(calendarContainer.children[i], selectMode);
-                    }
-                }
-            }
-            
-            for (let i = endRow * totalColumns; i <= endIndex; i++) {
-                if (!calendarContainer.children[i].classList.contains('disabled')) {
-                    toggleDaySelection(calendarContainer.children[i], selectMode);
-                }
-            }
-        }
-    }
-    
-    // Handle form submission to update availability
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (!currentUserData) {
-            showMessage('Nessun utente selezionato.', 'error');
+
+    // Member select change handler
+    memberSelect.addEventListener('change', async () => {
+        const selectedName = memberSelect.value.trim();
+        if (!selectedName) {
+            editorCard.style.display = 'none';
+            currentSelectedMember = null;
             return;
         }
-        
-        const selectedDays = Array.from(document.querySelectorAll('#calendar .calendar-day.selected'))
-            .map(dayDiv => dayDiv.dataset.date);
-        
+
+        try {
+            const response = await fetch(`/api/user/${encodeURIComponent(selectedName)}?clan=${encodeURIComponent(clanName)}`);
+            if (!response.ok) {
+                showToast(`Nessun dato trovato per "${selectedName}".`, 'error');
+                editorCard.style.display = 'none';
+                return;
+            }
+
+            const userData = await response.json();
+            currentSelectedMember = userData.name;
+            currentUserDisplay.textContent = userData.name;
+            editorCard.style.display = 'block';
+
+            buildCalendar(userData.days || []);
+            showToast(`Dati caricati per ${userData.name}. Puoi modificare le date.`, 'info');
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            showToast('Errore durante il recupero dei dati.', 'error');
+        }
+    });
+
+    // Quick Actions
+    document.getElementById('btn-quick-weekends')?.addEventListener('click', () => {
+        const days = calendarContainer.querySelectorAll('.calendar-day-cell:not(.placeholder):not(.disabled)');
+        days.forEach(day => {
+            const date = new Date(day.dataset.date);
+            const dayOfWeek = date.getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                day.classList.add('selected');
+            }
+        });
+        updateCounter();
+    });
+
+    document.getElementById('btn-quick-july')?.addEventListener('click', () => {
+        const days = calendarContainer.querySelectorAll('.calendar-day-cell.month-7:not(.disabled)');
+        days.forEach(day => day.classList.add('selected'));
+        updateCounter();
+    });
+
+    document.getElementById('btn-quick-august')?.addEventListener('click', () => {
+        const days = calendarContainer.querySelectorAll('.calendar-day-cell.month-8:not(.disabled)');
+        days.forEach(day => day.classList.add('selected'));
+        updateCounter();
+    });
+
+    document.getElementById('btn-quick-clear')?.addEventListener('click', () => {
+        const days = calendarContainer.querySelectorAll('.calendar-day-cell.selected');
+        days.forEach(day => day.classList.remove('selected'));
+        updateCounter();
+    });
+
+    function buildCalendar(selectedDates) {
+        const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header-cell'));
+        calendarContainer.innerHTML = '';
+        headers.forEach(h => calendarContainer.appendChild(h));
+
+        const firstDayOfWeek = startDate.getDay();
+        const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+
+        for (let i = 0; i < offset; i++) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'calendar-day-cell placeholder';
+            calendarContainer.appendChild(placeholder);
+        }
+
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dayCell = document.createElement('div');
+            const dateString = d.toISOString().split('T')[0];
+            const month = d.getMonth() + 1;
+
+            dayCell.className = `calendar-day-cell month-${month}`;
+            dayCell.dataset.date = dateString;
+            dayCell.textContent = d.getDate();
+
+            if (selectedDates.includes(dateString)) {
+                dayCell.classList.add('selected');
+            }
+
+            dayCell.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                startDayCell = dayCell;
+                isSelectMode = !dayCell.classList.contains('selected');
+                toggleDay(dayCell, isSelectMode);
+                updateCounter();
+            });
+
+            dayCell.addEventListener('mouseenter', () => {
+                if (isDragging && startDayCell) {
+                    selectRange(startDayCell, dayCell, isSelectMode);
+                    updateCounter();
+                }
+            });
+
+            dayCell.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startDayCell = dayCell;
+                isSelectMode = !dayCell.classList.contains('selected');
+                toggleDay(dayCell, isSelectMode);
+                updateCounter();
+            }, { passive: true });
+
+            dayCell.addEventListener('touchmove', (e) => {
+                if (!isDragging || !startDayCell) return;
+                const touch = e.touches[0];
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (target && target.classList.contains('calendar-day-cell') && !target.classList.contains('placeholder')) {
+                    selectRange(startDayCell, target, isSelectMode);
+                    updateCounter();
+                }
+            }, { passive: true });
+
+            calendarContainer.appendChild(dayCell);
+        }
+
+        updateCounter();
+    }
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        startDayCell = null;
+    });
+
+    document.addEventListener('touchend', () => {
+        isDragging = false;
+        startDayCell = null;
+    });
+
+    function toggleDay(cell, select) {
+        if (!cell || cell.classList.contains('placeholder') || cell.classList.contains('disabled')) return;
+        if (select) {
+            cell.classList.add('selected');
+        } else {
+            cell.classList.remove('selected');
+        }
+    }
+
+    function selectRange(fromCell, toCell, select) {
+        const allCells = Array.from(calendarContainer.querySelectorAll('.calendar-day-cell:not(.placeholder)'));
+        const fromIdx = allCells.indexOf(fromCell);
+        const toIdx = allCells.indexOf(toCell);
+
+        if (fromIdx === -1 || toIdx === -1) return;
+
+        const min = Math.min(fromIdx, toIdx);
+        const max = Math.max(fromIdx, toIdx);
+
+        for (let i = min; i <= max; i++) {
+            toggleDay(allCells[i], select);
+        }
+    }
+
+    function updateCounter() {
+        const selected = calendarContainer.querySelectorAll('.calendar-day-cell.selected');
+        if (selectedCounter) {
+            selectedCounter.textContent = selected.length;
+        }
+    }
+
+    // Submit update
+    updateBtn.addEventListener('click', async () => {
+        if (!currentSelectedMember) {
+            showToast('Nessun partecipante selezionato.', 'error');
+            return;
+        }
+
+        const selectedDays = Array.from(calendarContainer.querySelectorAll('.calendar-day-cell.selected'))
+            .map(cell => cell.dataset.date);
+
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = '<span>Aggiornamento in corso...</span>';
+
         try {
             const response = await fetch('/api/availability', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name: currentUserData.name, 
+                body: JSON.stringify({
+                    name: currentSelectedMember,
                     days: selectedDays,
-                    clan: localStorage.getItem('currentClan')
+                    clan: clanName
                 })
             });
-            
+
+            const data = await response.json();
+
             if (response.ok) {
-                showMessage('Disponibilità aggiornata con successo!', 'success');
-                // Add redirect to results page after successful update
+                showToast(`Disponibilità aggiornata per ${currentSelectedMember}!`, 'success');
                 setTimeout(() => {
                     window.location.href = '/results';
-                }, 1000); // Short delay to show the success message before redirecting
+                }, 800);
             } else {
-                const errorData = await response.json();
-                showMessage(`Errore: ${errorData.error}`, 'error');
+                showToast(data.error || 'Errore durante l\'aggiornamento.', 'error');
+                updateBtn.disabled = false;
+                updateBtn.innerHTML = '<span>Salva Modifiche</span> <span>✓</span>';
             }
         } catch (error) {
-            console.error('Network error:', error);
-            showMessage('Errore di rete durante l\'aggiornamento dei dati.', 'error');
+            console.error('Error updating availability:', error);
+            showToast('Errore di rete durante il salvataggio.', 'error');
+            updateBtn.disabled = false;
+            updateBtn.innerHTML = '<span>Salva Modifiche</span> <span>✓</span>';
         }
     });
-    
-    // Function to show messages
-    function showMessage(text, type) {
-        // Rimuovi messaggi esistenti prima di mostrarne uno nuovo
-        const existingMessages = document.querySelectorAll('.error-message, .success-message');
-        existingMessages.forEach(msg => msg.remove());
-        
-        // Crea un nuovo elemento messaggio
-        const messageElement = document.createElement('div');
-        messageElement.textContent = text;
-        messageElement.className = type === 'error' ? 'error-message' : 'success-message';
-        document.body.appendChild(messageElement);
-        
-        // Rimuovi il messaggio dopo l'animazione (5 secondi)
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        const icon = type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
         setTimeout(() => {
-            if (messageElement.parentNode) {
-                messageElement.parentNode.removeChild(messageElement);
-            }
-        }, 5000);
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
 });

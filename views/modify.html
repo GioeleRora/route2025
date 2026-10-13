@@ -1,45 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifica Dati</title>
+    <title>Route Planner - Modifica Dati</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="themed-background">
-    <h1>Modifica i Tuoi Dati</h1>
-    
-    <div class="centered-content">
-        <div class="search-container glass-effect">
-            <input type="text" id="name-search" placeholder="Inserisci il tuo nome" required>
-            <button id="search-button">Cerca</button>
+<body>
+    <header class="app-navbar">
+        <a href="/home" class="brand-link">
+            <span class="brand-icon">🏕️</span>
+            <span class="brand-text">Route Planner</span>
+        </a>
+        <div class="nav-clan-badge">
+            <span class="clan-indicator"></span>
+            <span>Clan: <span class="clan-name" id="nav-clan-name">...</span></span>
+            <a href="/home">← Dashboard</a>
         </div>
-    </div>
-    
-    <div id="user-data" style="display: none;">
-        <form id="availability-form">
-            <div id="calendar">
-                <div class="calendar-header">Lunedì</div>
-                <div class="calendar-header">Martedì</div>
-                <div class="calendar-header">Mercoledì</div>
-                <div class="calendar-header">Giovedì</div>
-                <div class="calendar-header">Venerdì</div>
-                <div class="calendar-header">Sabato</div>
-                <div class="calendar-header">Domenica</div>
-            </div>
-            <button type="submit" id="update-button">Aggiorna</button>
-        </form>
-    </div>
-    
-    <div id="message"></div>    
+    </header>
 
-    <div id="calendar-placeholder"></div>
-    
-    <div class="bottom-fixed-container">
-        <button onclick="window.location.href='/home'" class="back-button">Torna alla Home</button>
-        <div id="end">Made by Gioele Rora</div>
-    </div>
-    
+    <main class="app-container">
+        <div class="page-header">
+            <h1 class="page-title">Modifica le tue date</h1>
+            <p class="page-subtitle">Seleziona il tuo nome tra i partecipanti registrati per caricare e aggiornare le tue disponibilità.</p>
+        </div>
+
+        <!-- Member Selector Glass Card -->
+        <div class="glass-card">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="member-select" class="input-label">Seleziona il tuo nome:</label>
+                    <select id="member-select" class="form-control">
+                        <option value="">-- Caricamento partecipanti... --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Card (Hidden until user is selected) -->
+        <div id="editor-card" class="glass-card" style="display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+                <div>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Modifica disponibilità di:</span>
+                    <h2 id="current-user-display" style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--primary-light);"></h2>
+                </div>
+                <div class="month-badges-group">
+                    <span class="month-badge july">Luglio 2026</span>
+                    <span class="month-badge august">Agosto 2026</span>
+                </div>
+            </div>
+
+            <!-- Calendar Toolbar & Quick Actions -->
+            <div class="calendar-toolbar">
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Fai click o trascina sui giorni per selezionarli/deselezionarli
+                </div>
+                <div class="quick-actions-group">
+                    <button type="button" id="btn-quick-weekends" class="quick-action-btn">Tutti i weekend</button>
+                    <button type="button" id="btn-quick-july" class="quick-action-btn">Tutto Luglio</button>
+                    <button type="button" id="btn-quick-august" class="quick-action-btn">Tutto Agosto</button>
+                    <button type="button" id="btn-quick-clear" class="quick-action-btn" style="color: var(--danger);">Svuota</button>
+                </div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div id="calendar" class="calendar-grid">
+                <div class="calendar-header-cell">Lun</div>
+                <div class="calendar-header-cell">Mar</div>
+                <div class="calendar-header-cell">Mer</div>
+                <div class="calendar-header-cell">Gio</div>
+                <div class="calendar-header-cell">Ven</div>
+                <div class="calendar-header-cell">Sab</div>
+                <div class="calendar-header-cell">Dom</div>
+            </div>
+
+            <!-- Action Bar -->
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                    Giorni selezionati: <strong id="selected-counter" style="color: var(--primary-light); font-size: 1.1rem;">0</strong> / 62
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <a href="/home" class="btn btn-secondary">Annulla</a>
+                    <button type="button" id="update-btn" class="btn btn-primary btn-lg">
+                        <span>Salva Modifiche</span>
+                        <span>✓</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="app-footer">
+        <div>Route Planner &bull; Made with &hearts; for Scouts by Gioele Rora</div>
+    </footer>
+
     <script src="/js/modify.js"></script>
 </body>
 </html>
