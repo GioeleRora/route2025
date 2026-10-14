@@ -19,16 +19,30 @@ const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
 if (!connectionString) {
     console.error('ERROR: No database connection string available. Please check your .env file.');
-    process.exit(1);
+    if (require.main === module) process.exit(1);
 }
 
 // Create SQL executor using neon's serverless driver
 const sql = neon(connectionString);
 
+// Helpers
 const normalizeName = (name) => (typeof name === 'string' ? name.trim() : '');
 const normalizeClan = (clan) => (typeof clan === 'string' && clan.trim() ? clan.trim() : 'default');
 
-// Initialize database connection with retries
+function validateAndSanitizeDays(days) {
+    if (!Array.isArray(days)) return null;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    // Filter only valid YYYY-MM-DD date strings, remove duplicates and limit to 62 (July + August)
+    const uniqueValidDays = [...new Set(days.filter(d => typeof d === 'string' && dateRegex.test(d)))];
+    if (uniqueValidDays.length > 62) return null;
+    return uniqueValidDays;
+}
+
+// Database state tracker
+let isDbReady = false;
+let dbInitPromise = null;
+
+// Initialize database schema and tables with retries
 async function initializeDbConnection(retries = 5) {
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
@@ -92,6 +106,11 @@ async function initializeDbConnection(retries = 5) {
                 console.log('✓ Unique index on (name, clan) ensured');
             }
 
+            // Ensure index on clan for fast lookups
+            await sql`
+                CREATE INDEX IF NOT EXISTS idx_availability_clan ON availability (clan);
+            `;
+
             // Ensure clans table exists
             await sql`
                 CREATE TABLE IF NOT EXISTS clans (
@@ -108,22 +127,52 @@ async function initializeDbConnection(retries = 5) {
                 ON CONFLICT (name) DO NOTHING;
             `;
 
+            isDbReady = true;
             return true;
         } catch (err) {
             console.error(`Database connection attempt ${attempt} failed:`, err.message);
 
             if (attempt < retries) {
-                const delay = 2000 * attempt;
+                const delay = 1500 * attempt;
                 console.log(`Retrying in ${delay / 1000} seconds...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             } else {
-                console.error('All connection attempts failed. Please check your database configuration.');
-                return false;
+                console.error('All database connection attempts failed.');
+                throw err;
             }
         }
     }
     return false;
 }
+
+// Lazy initialization wrapper ensuring db readiness across cold starts
+async function ensureDatabase() {
+    if (isDbReady) return true;
+    if (!dbInitPromise) {
+        dbInitPromise = initializeDbConnection().then(ok => {
+            isDbReady = ok;
+            return ok;
+        }).catch(err => {
+            dbInitPromise = null;
+            throw err;
+        });
+    }
+    return dbInitPromise;
+}
+
+// API Middleware ensuring database readiness before any query executes
+app.use('/api', async (req, res, next) => {
+    try {
+        await ensureDatabase();
+        next();
+    } catch (err) {
+        console.error('API Database middleware error:', err.message);
+        res.status(503).json({
+            error: 'Database momentaneamente non raggiungibile',
+            details: err.message
+        });
+    }
+});
 
 // ==========================================
 // API Endpoints
@@ -146,7 +195,7 @@ app.get('/api/clans', async (req, res) => {
         console.error('Error fetching clans:', err);
         res.status(500).json({
             status: 'error',
-            message: 'Failed to fetch clans',
+            message: 'Errore nel recupero dei clan',
             error: err.message
         });
     }
@@ -257,14 +306,15 @@ app.get('/api/user/:name', async (req, res) => {
     }
 });
 
-// Save or overwrite availability for a user (atomic upsert)
+// Save or overwrite availability for a user (atomic upsert with case-insensitivity)
 app.post('/api/availability', async (req, res) => {
     const { name, days, clan } = req.body;
     const normalizedName = normalizeName(name);
     const normalizedClan = normalizeClan(clan);
+    const cleanDays = validateAndSanitizeDays(days);
 
-    if (!normalizedName || !Array.isArray(days)) {
-        return res.status(400).json({ error: 'Dati non validi: nome e giorni sono obbligatori' });
+    if (!normalizedName || cleanDays === null) {
+        return res.status(400).json({ error: 'Dati non validi: nome e lista giorni (max 62) obbligatori' });
     }
 
     try {
@@ -274,13 +324,24 @@ app.post('/api/availability', async (req, res) => {
             ON CONFLICT (name) DO NOTHING;
         `;
 
-        // Upsert availability directly into PostgreSQL
-        await sql`
-            INSERT INTO availability (name, days, clan)
-            VALUES (${normalizedName}, ${JSON.stringify(days)}, ${normalizedClan})
-            ON CONFLICT (name, clan)
-            DO UPDATE SET days = ${JSON.stringify(days)};
+        // Check if user already exists case-insensitively in clan
+        const existing = await sql`
+            SELECT id FROM availability 
+            WHERE LOWER(name) = LOWER(${normalizedName}) AND clan = ${normalizedClan};
         `;
+
+        if (existing.length > 0) {
+            await sql`
+                UPDATE availability
+                SET days = ${JSON.stringify(cleanDays)}, name = ${normalizedName}
+                WHERE id = ${existing[0].id};
+            `;
+        } else {
+            await sql`
+                INSERT INTO availability (name, days, clan)
+                VALUES (${normalizedName}, ${JSON.stringify(cleanDays)}, ${normalizedClan});
+            `;
+        }
 
         res.status(200).json({ message: 'Disponibilità salvata con successo' });
     } catch (err) {
@@ -294,15 +355,16 @@ app.put('/api/availability', async (req, res) => {
     const { name, days, clan } = req.body;
     const normalizedName = normalizeName(name);
     const normalizedClan = normalizeClan(clan);
+    const cleanDays = validateAndSanitizeDays(days);
 
-    if (!normalizedName || !Array.isArray(days)) {
-        return res.status(400).json({ error: 'Dati non validi: nome e giorni sono obbligatori' });
+    if (!normalizedName || cleanDays === null) {
+        return res.status(400).json({ error: 'Dati non validi: nome e lista giorni (max 62) obbligatori' });
     }
 
     try {
         const result = await sql`
             UPDATE availability
-            SET days = ${JSON.stringify(days)}
+            SET days = ${JSON.stringify(cleanDays)}, name = ${normalizedName}
             WHERE LOWER(name) = LOWER(${normalizedName}) AND clan = ${normalizedClan}
             RETURNING id, name;
         `;
@@ -315,6 +377,34 @@ app.put('/api/availability', async (req, res) => {
     } catch (err) {
         console.error('Error handling PUT /api/availability:', err.message);
         res.status(500).json({ error: 'Errore nell\'aggiornamento della disponibilità', details: err.message });
+    }
+});
+
+// Delete user availability
+app.delete('/api/availability', async (req, res) => {
+    const { name, clan } = req.body;
+    const normalizedName = normalizeName(name);
+    const normalizedClan = normalizeClan(clan);
+
+    if (!normalizedName) {
+        return res.status(400).json({ error: 'Nome obbligatorio per la rimozione' });
+    }
+
+    try {
+        const result = await sql`
+            DELETE FROM availability
+            WHERE LOWER(name) = LOWER(${normalizedName}) AND clan = ${normalizedClan}
+            RETURNING id, name;
+        `;
+
+        if (result.length === 0) {
+            return res.status(404).json({ error: 'Partecipante non trovato nel clan specificato' });
+        }
+
+        res.status(200).json({ message: `Disponibilità di ${result[0].name} rimossa con successo` });
+    } catch (err) {
+        console.error('Error handling DELETE /api/availability:', err.message);
+        res.status(500).json({ error: 'Errore durante la rimozione', details: err.message });
     }
 });
 
@@ -346,16 +436,16 @@ app.get('/results', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'results.html'));
 });
 
-// Start the server only after trying to establish DB connection
-initializeDbConnection().then(connected => {
-    if (connected) {
+// Start local server if run directly
+if (require.main === module) {
+    ensureDatabase().then(() => {
         app.listen(port, () => {
-            console.log(`✓ Server is running on port ${port}`);
+            console.log(`✓ Server in esecuzione su http://localhost:${port}`);
         });
-    } else {
-        console.error('✗ Server not started due to database connection failure');
+    }).catch(err => {
+        console.error('✗ Impossibile avviare il server causa errore database:', err.message);
         process.exit(1);
-    }
-});
+    });
+}
 
 module.exports = app;
