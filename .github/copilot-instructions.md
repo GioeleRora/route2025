@@ -1,29 +1,24 @@
-# Copilot instructions
+# Copilot Instructions
 
-## Commands
+This repository contains project-specific instructions and conventions for GitHub Copilot.
+The master universal instructions are maintained in [`AGENTS.md`](../AGENTS.md). Refer to `AGENTS.md` for full specifications, database schema, API contracts, and UX rules.
 
-- `npm start` — runs `node app.js`
-- `node dbtest.js` — checks Neon connectivity with `POSTGRES_URL`, `DATABASE_URL`, or direct PG env vars
-- `npm test` — placeholder in `package.json` and currently exits with `Error: no test specified`
+## Quick Reference & Constraints
+- **Commands:**
+  - `npm start` — runs `node app.js` (local server on port 3000)
+  - `node dbtest.js` — checks Neon PostgreSQL connectivity
+  - `node -c app.js` — validates JavaScript syntax
+- **Stack:**
+  - Express.js + `@neondatabase/serverless` (CommonJS `require`)
+  - Vanilla HTML in `views/`, CSS in `public/css/styles.css`, JS in `public/js/`
+  - Zero-build step: do not introduce React, Tailwind, or bundlers
+  - Deployment on Vercel via `@vercel/node` and static routes (`vercel.json`)
+- **Key Conventions:**
+  - Database schema: `clans` (`name` PK) and `availability` (`id` SERIAL PK, `name`, `clan`, `days` JSONB, indexed on `clan` and unique `(name, clan)`).
+  - API endpoints: `/api/clans`, `/api/clan`, `/api/members`, `/api/availability`, `/api/user/:name`.
+  - Cold-start protection: all `/api` routes use `ensureDatabase()` middleware.
+  - Mobile touch safety: never let touch events interfere with vertical page scroll; distinguish tap (< 8px movement) from scroll.
+  - Desktop calendar: keep cells compact (40px height, max-width 620px) so July and August fit cleanly on a single screen.
+  - UI Language: all copy must remain in Italian.
 
-No build or lint scripts are defined in `package.json`.
-
-## Architecture
-
-- `app.js` is the entry point and owns both the HTTP server and the API.
-- The app uses Express + `body-parser` on top of Neon’s serverless Postgres driver.
-- Startup loads `.env`, picks `POSTGRES_URL` first, then `DATABASE_URL`, then exits if neither exists.
-- On boot, the server retries the DB connection and bootstraps the `availability` table, including a legacy upgrade path for missing `clan` and `id` columns.
-- Frontend pages are static HTML in `views/`; browser logic lives in `public/js/`; shared styles are in `public/css/styles.css`.
-- `vercel.json` maps `/api/*` to `app.js` and serves the HTML/CSS/JS assets as static routes.
-- Clan selection is stored in `localStorage.currentClan` and reused by the home, add, modify, and results flows.
-- Availability data is clan-scoped, stored as `JSONB` days, and the results page computes the best slot client-side from fetched availability rows.
-
-## Conventions
-
-- Keep CommonJS (`require`/`module.exports`) unless the whole app is migrated.
-- Preserve the existing route split: `/api/*` for data, `/home`, `/add`, `/modify`, `/results`, and `/clan-select` for pages.
-- When changing availability logic, keep `name` trimming/normalization and the `(name, clan)` uniqueness rule aligned between server and client.
-- Keep date handling aligned with the fixed July–August 2026 calendar used across add, modify, and results pages.
-- Preserve the current Italian UI copy and page flow unless the whole surface is being redesigned.
-- If you touch routing or file paths, keep `app.js` and `vercel.json` in sync.
+See [`AGENTS.md`](../AGENTS.md) for full architectural guidelines.

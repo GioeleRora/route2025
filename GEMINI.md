@@ -1,29 +1,14 @@
 # Route Planner - Project Instructions for Gemini CLI
 
-This file contains project-specific instructions, conventions, and architectural rules for the Gemini CLI agent.
+This repository contains project-specific instructions, conventions, and architectural rules for the Gemini CLI agent.
+The master universal instructions are located in [`AGENTS.md`](./AGENTS.md). Always consult `AGENTS.md` for full specifications, database schema, API contracts, and UX rules.
 
-## Project Overview
-- **Name:** route-planner
-- **Description:** A simple route planner for a group of people.
-- **Environment:** Node.js (CommonJS)
-- **Deployment:** Vercel (indicated by `vercel.json` and `@vercel/analytics`)
+## Quick Summary & Hard Constraints
+- **Stack:** Node.js (CommonJS `require`), Express.js, Neon PostgreSQL (`@neondatabase/serverless`), Vanilla HTML/CSS/JS.
+- **Zero Build:** Do not introduce React, Tailwind, Vite, Webpack, or TypeScript. Keep vanilla architecture.
+- **Language:** All user-facing UI text, buttons, alerts, and toasts must be in Italian.
+- **Serverless & Local:** `app.js` supports both local execution via `npm start` and Vercel serverless deployment (`module.exports = app`).
+- **Touch & Mobile:** Never hijack page scrolling with touch events. Keep tap detection (< 8px movement) distinct from scroll. Use the range picker (`btn-quick-range`) for multi-day selections.
+- **Desktop UI:** Keep the desktop calendar compact (max-width 620px, 40px cell height) so all 62 days fit within one screen without scrolling.
 
-## Tech Stack
-- **Backend:** Express.js (`app.js`), CommonJS (`require`).
-- **Database:** PostgreSQL (`pg`, `@neondatabase/serverless`).
-- **Frontend:** Vanilla HTML (`views/*.html`), CSS (`public/css/*.css`), and JavaScript (`public/js/*.js`).
-
-## Coding Conventions & Style
-- Use **CommonJS** (`require`/`module.exports`) for backend Node.js files unless explicitly instructed otherwise.
-- **Express.js:** Ensure routes are clearly defined and follow RESTful principles where applicable. Use `body-parser` for handling incoming request bodies.
-- **Frontend:** Maintain the separation of concerns (HTML in `views/`, CSS in `public/css/`, JS in `public/js/`).
-- **Database:** Use the configured PostgreSQL clients for DB interactions. Ensure sensitive credentials are only loaded via environment variables (e.g., `dotenv`).
-
-## Workflows
-- **Running locally:** Use `npm start` to run the app via `app.js`.
-- **Testing:** No automated testing framework is currently configured. Ensure manual verification of features or add appropriate test scripts as needed.
-
-## Agent Guidelines
-- Before making significant architectural changes, use `enter_plan_mode` to draft a proposal.
-- Keep changes localized, idiomatic, and consistent with the existing CommonJS and Vanilla JS architecture.
-- Do not introduce new frameworks (like React, Tailwind) unless explicitly requested by the user.
+Refer to [`AGENTS.md`](./AGENTS.md) for full documentation on database schema, REST endpoints, and architectural details.
