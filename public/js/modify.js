@@ -15,14 +15,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selectedCounter = document.getElementById('selected-counter');
     const updateBtn = document.getElementById('update-btn');
 
+    // Range picker banner elements
+    const btnQuickRange = document.getElementById('btn-quick-range');
+    const rangeBanner = document.getElementById('range-banner');
+    const rangeBannerText = document.getElementById('range-banner-text');
+    const btnCancelRange = document.getElementById('btn-cancel-range');
+
     const YEAR = 2026;
-    const startDate = new Date(`${YEAR}-07-01`);
-    const endDate = new Date(`${YEAR}-08-31`);
 
     let currentSelectedMember = null;
-    let isDragging = false;
-    let startDayCell = null;
-    let isSelectMode = true;
+    let isMouseDragging = false;
+    let mouseStartCell = null;
+    let mouseSelectMode = true;
+
+    // Range mode state
+    let isRangeMode = false;
+    let rangeStartCell = null;
 
     // Load registered members into select
     loadMembers();
@@ -59,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Member select change handler
     memberSelect.addEventListener('change', async () => {
+        cancelRangeMode();
         const selectedName = memberSelect.value.trim();
         if (!selectedName) {
             editorCard.style.display = 'none';
@@ -87,43 +96,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ==========================================
+    // Range Picker Tool (Mobile & Desktop)
+    // ==========================================
+    btnQuickRange?.addEventListener('click', () => {
+        if (isRangeMode) {
+            cancelRangeMode();
+        } else {
+            startRangeMode();
+        }
+    });
+
+    btnCancelRange?.addEventListener('click', cancelRangeMode);
+
+    function startRangeMode() {
+        isRangeMode = true;
+        rangeStartCell = null;
+        if (rangeBanner) rangeBanner.style.display = 'flex';
+        if (rangeBannerText) rangeBannerText.textContent = '👉 Tocca la prima data (inizio periodo)...';
+        if (btnQuickRange) btnQuickRange.style.background = 'rgba(245, 158, 11, 0.25)';
+    }
+
+    function cancelRangeMode() {
+        isRangeMode = false;
+        if (rangeStartCell) {
+            rangeStartCell.classList.remove('range-anchor');
+            rangeStartCell = null;
+        }
+        if (rangeBanner) rangeBanner.style.display = 'none';
+        if (btnQuickRange) btnQuickRange.style.background = '';
+    }
+
+    // ==========================================
     // Quick Actions
+    // ==========================================
     document.getElementById('btn-quick-weekends')?.addEventListener('click', () => {
+        cancelRangeMode();
         const days = calendarContainer.querySelectorAll('.calendar-day-cell:not(.placeholder):not(.disabled)');
         days.forEach(day => {
-            const date = new Date(day.dataset.date);
-            const dayOfWeek = date.getDay();
+            const [y, m, d] = day.dataset.date.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const dayOfWeek = dateObj.getDay();
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 day.classList.add('selected');
             }
         });
         updateCounter();
+        showToast('Weekend selezionati!', 'info');
     });
 
     document.getElementById('btn-quick-july')?.addEventListener('click', () => {
+        cancelRangeMode();
         const days = calendarContainer.querySelectorAll('.calendar-day-cell.month-7:not(.disabled)');
         days.forEach(day => day.classList.add('selected'));
         updateCounter();
+        showToast('Tutto Luglio selezionato!', 'info');
     });
 
     document.getElementById('btn-quick-august')?.addEventListener('click', () => {
+        cancelRangeMode();
         const days = calendarContainer.querySelectorAll('.calendar-day-cell.month-8:not(.disabled)');
         days.forEach(day => day.classList.add('selected'));
         updateCounter();
+        showToast('Tutto Agosto selezionato!', 'info');
     });
 
     document.getElementById('btn-quick-clear')?.addEventListener('click', () => {
+        cancelRangeMode();
         const days = calendarContainer.querySelectorAll('.calendar-day-cell.selected');
         days.forEach(day => day.classList.remove('selected'));
         updateCounter();
+        showToast('Selezione azzerata.', 'info');
     });
 
+    // ==========================================
+    // Calendar Generation
+    // ==========================================
     function buildCalendar(selectedDates) {
         const headers = Array.from(calendarContainer.querySelectorAll('.calendar-header-cell'));
         calendarContainer.innerHTML = '';
         headers.forEach(h => calendarContainer.appendChild(h));
 
-        const firstDayOfWeek = startDate.getDay();
+        // Monday-based offset for July 1st, 2026
+        const firstDayOfWeek = new Date(YEAR, 6, 1).getDay();
         const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
         for (let i = 0; i < offset; i++) {
@@ -132,68 +187,121 @@ document.addEventListener('DOMContentLoaded', async () => {
             calendarContainer.appendChild(placeholder);
         }
 
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const allDays = [];
+        for (let d = 1; d <= 31; d++) allDays.push({ month: 7, day: d });
+        for (let d = 1; d <= 31; d++) allDays.push({ month: 8, day: d });
+
+        allDays.forEach(({ month, day }) => {
             const dayCell = document.createElement('div');
-            const dateString = d.toISOString().split('T')[0];
-            const month = d.getMonth() + 1;
+            const dateString = `${YEAR}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
             dayCell.className = `calendar-day-cell month-${month}`;
             dayCell.dataset.date = dateString;
-            dayCell.textContent = d.getDate();
+            dayCell.textContent = day;
+
+            if (day === 1) {
+                dayCell.classList.add('month-start');
+                dayCell.dataset.monthLabel = month === 7 ? '1 Lug' : '1 Ago';
+            }
 
             if (selectedDates.includes(dateString)) {
                 dayCell.classList.add('selected');
             }
 
-            dayCell.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                isDragging = true;
-                startDayCell = dayCell;
-                isSelectMode = !dayCell.classList.contains('selected');
-                toggleDay(dayCell, isSelectMode);
-                updateCounter();
-            });
-
-            dayCell.addEventListener('mouseenter', () => {
-                if (isDragging && startDayCell) {
-                    selectRange(startDayCell, dayCell, isSelectMode);
-                    updateCounter();
-                }
-            });
-
-            dayCell.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                startDayCell = dayCell;
-                isSelectMode = !dayCell.classList.contains('selected');
-                toggleDay(dayCell, isSelectMode);
-                updateCounter();
-            }, { passive: true });
-
-            dayCell.addEventListener('touchmove', (e) => {
-                if (!isDragging || !startDayCell) return;
-                const touch = e.touches[0];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                if (target && target.classList.contains('calendar-day-cell') && !target.classList.contains('placeholder')) {
-                    selectRange(startDayCell, target, isSelectMode);
-                    updateCounter();
-                }
-            }, { passive: true });
-
+            attachCellEvents(dayCell);
             calendarContainer.appendChild(dayCell);
-        }
+        });
 
         updateCounter();
     }
 
+    // ==========================================
+    // Cell Interaction Events (Touch & Mouse Safe)
+    // ==========================================
+    function attachCellEvents(dayCell) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isScrolling = false;
+
+        dayCell.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            touchStartX = t.clientX;
+            touchStartY = t.clientY;
+            isScrolling = false;
+        }, { passive: true });
+
+        dayCell.addEventListener('touchmove', (e) => {
+            const t = e.touches[0];
+            const diffX = Math.abs(t.clientX - touchStartX);
+            const diffY = Math.abs(t.clientY - touchStartY);
+            if (diffX > 8 || diffY > 8) {
+                isScrolling = true;
+            }
+        }, { passive: true });
+
+        dayCell.addEventListener('touchend', (e) => {
+            if (isScrolling) return;
+
+            e.preventDefault();
+            handleDaySelection(dayCell);
+        });
+
+        dayCell.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+
+            if (isRangeMode) {
+                handleDaySelection(dayCell);
+                return;
+            }
+
+            isMouseDragging = true;
+            mouseStartCell = dayCell;
+            mouseSelectMode = !dayCell.classList.contains('selected');
+            toggleDay(dayCell, mouseSelectMode);
+            updateCounter();
+        });
+
+        dayCell.addEventListener('mouseenter', () => {
+            if (isMouseDragging && mouseStartCell && !isRangeMode) {
+                selectRange(mouseStartCell, dayCell, mouseSelectMode);
+                updateCounter();
+            }
+        });
+    }
+
     document.addEventListener('mouseup', () => {
-        isDragging = false;
-        startDayCell = null;
+        isMouseDragging = false;
+        mouseStartCell = null;
     });
 
-    document.addEventListener('touchend', () => {
-        isDragging = false;
-        startDayCell = null;
-    });
+    function handleDaySelection(cell) {
+        if (isRangeMode) {
+            handleRangeModeSelection(cell);
+            return;
+        }
+
+        const willSelect = !cell.classList.contains('selected');
+        toggleDay(cell, willSelect);
+        updateCounter();
+    }
+
+    function handleRangeModeSelection(cell) {
+        if (!rangeStartCell) {
+            rangeStartCell = cell;
+            cell.classList.add('range-anchor');
+            if (rangeBannerText) {
+                rangeBannerText.textContent = `📍 Inizio: ${formatShortDate(cell.dataset.date)}. Ora tocca la data di fine!`;
+            }
+        } else {
+            selectRange(rangeStartCell, cell, true);
+            const d1 = formatShortDate(rangeStartCell.dataset.date);
+            const d2 = formatShortDate(cell.dataset.date);
+
+            showToast(`Periodo dal ${d1} al ${d2} selezionato!`, 'success');
+            cancelRangeMode();
+            updateCounter();
+        }
+    }
 
     function toggleDay(cell, select) {
         if (!cell || cell.classList.contains('placeholder') || cell.classList.contains('disabled')) return;
@@ -226,7 +334,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Submit update
+    function formatShortDate(dateStr) {
+        const [, m, d] = dateStr.split('-');
+        return `${d}/${m}`;
+    }
+
+    // ==========================================
+    // Submit Update
+    // ==========================================
     updateBtn.addEventListener('click', async () => {
         if (!currentSelectedMember) {
             showToast('Nessun partecipante selezionato.', 'error');

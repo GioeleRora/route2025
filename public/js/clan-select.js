@@ -64,11 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             existingClansSelect.innerHTML = '<option value="">-- Seleziona un clan esistente --</option>';
 
+            const savedClan = localStorage.getItem('currentClan');
+
             if (data.status === 'success' && data.clans && data.clans.length > 0) {
                 data.clans.forEach(clan => {
                     const option = document.createElement('option');
                     option.value = clan;
                     option.textContent = clan;
+                    if (savedClan && clan.toLowerCase() === savedClan.toLowerCase()) {
+                        option.selected = true;
+                    }
                     existingClansSelect.appendChild(option);
                 });
             } else {

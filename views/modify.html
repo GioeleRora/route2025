@@ -59,11 +59,18 @@
                     Fai click o trascina sui giorni per selezionarli/deselezionarli
                 </div>
                 <div class="quick-actions-group">
+                    <button type="button" id="btn-quick-range" class="quick-action-btn" style="color: var(--accent-light);">📅 Seleziona Periodo</button>
                     <button type="button" id="btn-quick-weekends" class="quick-action-btn">Tutti i weekend</button>
                     <button type="button" id="btn-quick-july" class="quick-action-btn">Tutto Luglio</button>
                     <button type="button" id="btn-quick-august" class="quick-action-btn">Tutto Agosto</button>
                     <button type="button" id="btn-quick-clear" class="quick-action-btn" style="color: var(--danger);">Svuota</button>
                 </div>
+            </div>
+
+            <!-- Range selection helper banner -->
+            <div id="range-banner" class="range-helper-banner" style="display: none;">
+                <span id="range-banner-text">👉 Tocca la prima data (inizio periodo)...</span>
+                <button type="button" id="btn-cancel-range" class="btn btn-sm btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">Annulla</button>
             </div>
 
             <!-- Calendar Grid -->

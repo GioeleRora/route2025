@@ -616,24 +616,26 @@ select.form-control option {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    gap: 6px;
+    max-width: 620px;
+    margin: 0 auto;
     user-select: none;
-    touch-action: pan-y;
+    -webkit-user-select: none;
 }
 
 .calendar-header-cell {
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
-    padding: 8px 4px;
+    padding: 6px 2px;
 }
 
 .calendar-day-cell {
-    aspect-ratio: 1 / 1;
-    min-height: 44px;
+    height: 40px;
+    min-height: 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -641,12 +643,13 @@ select.form-control option {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 600;
     color: var(--text-primary);
     cursor: pointer;
     position: relative;
     transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+    touch-action: manipulation;
 }
 
 .calendar-day-cell:hover:not(.disabled):not(.placeholder) {
@@ -671,11 +674,61 @@ select.form-control option {
 
 /* Month markers subtle color border/tint */
 .calendar-day-cell.month-7 {
-    border-color: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.22);
 }
 
 .calendar-day-cell.month-8 {
-    border-color: rgba(167, 139, 250, 0.18);
+    border-color: rgba(167, 139, 250, 0.22);
+}
+
+/* Month start badge (1 Lug, 1 Ago) */
+.calendar-day-cell.month-start::before {
+    content: attr(data-month-label);
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 4px;
+    line-height: 1.1;
+    white-space: nowrap;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.calendar-day-cell.month-start.month-7::before {
+    background: var(--july-color);
+    color: #0c1a24;
+}
+
+.calendar-day-cell.month-start.month-8::before {
+    background: var(--august-color);
+    color: #ffffff;
+}
+
+/* Range picker anchor state */
+.calendar-day-cell.range-anchor {
+    border: 2px dashed var(--accent-light) !important;
+    background: rgba(245, 158, 11, 0.25) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px var(--accent-glow) !important;
+}
+
+.range-helper-banner {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 /* Selected state (in add / modify) */
@@ -1083,34 +1136,50 @@ select.form-control option {
    ========================================================================== */
 @media (max-width: 768px) {
     .app-navbar {
-        padding: 10px 16px;
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
-    .brand-text {
+    .brand-link {
         font-size: 1.1rem;
     }
 
+    .nav-clan-badge {
+        font-size: 0.78rem;
+        padding: 4px 10px;
+    }
+
     .app-container {
-        padding: 20px 12px 60px;
+        padding: 16px 10px 50px;
     }
 
     .glass-card {
-        padding: 20px 16px;
+        padding: 18px 12px;
         border-radius: var(--radius-md);
     }
 
     .page-title {
-        font-size: 1.75rem;
+        font-size: 1.6rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.92rem;
     }
 
     .calendar-grid {
+        max-width: 100%;
         gap: 4px;
+        touch-action: pan-y;
     }
 
     .calendar-day-cell {
+        height: auto;
+        aspect-ratio: 1 / 1;
         min-height: 38px;
         font-size: 0.85rem;
         border-radius: 6px;
+        touch-action: manipulation;
     }
 
     .calendar-header-cell {
@@ -1119,17 +1188,32 @@ select.form-control option {
     }
 
     .day-count-badge {
-        font-size: 0.6rem;
+        font-size: 0.58rem;
     }
 
     .calendar-toolbar {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .month-badges-group {
+        justify-content: center;
     }
 
     .quick-actions-group {
-        justify-content: center;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        width: 100%;
+    }
+
+    .quick-action-btn {
+        text-align: center;
+        padding: 8px 6px;
+        font-size: 0.78rem;
+        width: 100%;
     }
 }
 
@@ -1140,7 +1224,7 @@ select.form-control option {
 
     .calendar-day-cell {
         min-height: 34px;
-        font-size: 0.75rem;
+        font-size: 0.78rem;
     }
 
     .calendar-header-cell {
@@ -1148,7 +1232,7 @@ select.form-control option {
     }
 
     .btn-lg {
-        padding: 14px 20px;
-        font-size: 1rem;
+        padding: 12px 18px;
+        font-size: 0.95rem;
     }
 }

@@ -60,13 +60,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         membersByDay = {};
         dateRange = [];
 
-        // Build list of dates
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().split('T')[0];
+        // Build list of dates safely
+        const allDaysMeta = [];
+        for (let d = 1; d <= 31; d++) allDaysMeta.push({ month: 7, day: d, dateStr: `${YEAR}-07-${String(d).padStart(2, '0')}` });
+        for (let d = 1; d <= 31; d++) allDaysMeta.push({ month: 8, day: d, dateStr: `${YEAR}-08-${String(d).padStart(2, '0')}` });
+
+        allDaysMeta.forEach(({ dateStr }) => {
             dateRange.push(dateStr);
             daysCount[dateStr] = 0;
             membersByDay[dateStr] = { present: [], absent: [] };
-        }
+        });
 
         // Aggregate presence
         availabilities.forEach(person => {
@@ -96,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         calendarContainer.innerHTML = '';
         headers.forEach(h => calendarContainer.appendChild(h));
 
-        const firstDayOfWeek = startDate.getDay();
+        const firstDayOfWeek = new Date(YEAR, 6, 1).getDay();
         const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
         for (let i = 0; i < offset; i++) {
@@ -105,15 +108,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             calendarContainer.appendChild(placeholder);
         }
 
-        dateRange.forEach(dateStr => {
-            const d = new Date(dateStr);
+        allDaysMeta.forEach(({ month, day, dateStr }) => {
             const dayCell = document.createElement('div');
-            const month = d.getMonth() + 1;
             const count = daysCount[dateStr] || 0;
             const ratio = totalRespondents > 0 ? count / totalRespondents : 0;
 
             dayCell.className = `calendar-day-cell heatmap-cell month-${month}`;
             dayCell.dataset.date = dateStr;
+
+            if (day === 1) {
+                dayCell.classList.add('month-start');
+                dayCell.dataset.monthLabel = month === 7 ? '1 Lug' : '1 Ago';
+            }
 
             if (bestSlotDaysSet.has(dateStr)) {
                 dayCell.classList.add('in-best-slot');
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             dayCell.innerHTML = `
-                <span>${d.getDate()}</span>
+                <span>${day}</span>
                 <span class="day-count-badge" style="color: ${ratio > 0.6 ? '#d1fae5' : 'var(--text-muted)'};">
                     ${count}${totalRespondents > 0 ? `/${totalRespondents}` : ''}
                 </span>
